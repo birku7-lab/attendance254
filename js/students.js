@@ -232,3 +232,133 @@ function printQR(name, adm) {
     `);
     printWindow.document.close();
 }
+
+async function downloadStudentsPDF() {
+    const btn = document.getElementById('download-pdf-btn');
+    btn.innerHTML = '<i class="ph ph-spinner"></i> Generating...';
+    btn.disabled = true;
+
+    const res = await fetchData('api/students.php?action=list');
+
+    if (!res || res.status !== 'success' || res.data.length === 0) {
+        showNotification('No students found to export.', 'error');
+        btn.innerHTML = '<i class="ph ph-file-pdf"></i> Download PDF';
+        btn.disabled = false;
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+    // Header background
+    doc.setFillColor(79, 70, 229); // primary indigo
+    doc.rect(0, 0, 297, 28, 'F');
+
+    // School name
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('EduGate School System', 14, 13);
+
+    // Report title
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Student Directory Report', 14, 21);
+
+    // Date on right
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    doc.setFontSize(9);
+    doc.text(`Generated: ${dateStr}`, 297 - 14, 21, { align: 'right' });
+
+    // Summary box
+    doc.setTextColor(50, 50, 50);
+    doc.setFillColor(245, 245, 255);
+    doc.roundedRect(14, 32, 60, 14, 3, 3, 'F');
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Total Students', 16, 38);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(79, 70, 229);
+    doc.text(String(res.data.length), 16, 45);
+
+    // Count by gender
+    const males = res.data.filter(s => s.gender && s.gender.toLowerCase() === 'male').length;
+    const females = res.data.filter(s => s.gender && s.gender.toLowerCase() === 'female').length;
+
+    doc.setFillColor(245, 255, 250);
+    doc.roundedRect(80, 32, 60, 14, 3, 3, 'F');
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(50, 50, 50);
+    doc.text('Male Students', 82, 38);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(16, 185, 129);
+    doc.text(String(males), 82, 45);
+
+    doc.setFillColor(255, 245, 255);
+    doc.roundedRect(146, 32, 60, 14, 3, 3, 'F');
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(50, 50, 50);
+    doc.text('Female Students', 148, 38);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(236, 72, 153);
+    doc.text(String(females), 148, 45);
+
+    // Table
+    const tableData = res.data.map((s, i) => [
+        i + 1,
+        s.full_name || '-',
+        s.admission_number || '-',
+        s.class || '-',
+        s.gender || '-',
+        s.phone || '-',
+        s.email || '-',
+        s.date_of_birth || '-',
+        s.created_at ? s.created_at.split(' ')[0] : '-'
+    ]);
+
+    doc.autoTable({
+        startY: 52,
+        head: [['#', 'Full Name', 'Adm No.', 'Class', 'Gender', 'Phone', 'Email', 'Date of Birth', 'Registered']],
+        body: tableData,
+        styles: { fontSize: 8.5, cellPadding: 3, textColor: [40, 40, 40] },
+        headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+        alternateRowStyles: { fillColor: [248, 248, 255] },
+        columnStyles: {
+            0: { cellWidth: 10, halign: 'center' },
+            1: { cellWidth: 45 },
+            2: { cellWidth: 25 },
+            3: { cellWidth: 22 },
+            4: { cellWidth: 20 },
+            5: { cellWidth: 28 },
+            6: { cellWidth: 48 },
+            7: { cellWidth: 28 },
+            8: { cellWidth: 28 }
+        },
+        margin: { left: 14, right: 14 }
+    });
+
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFillColor(79, 70, 229);
+        doc.rect(0, doc.internal.pageSize.height - 10, 297, 10, 'F');
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(255, 255, 255);
+        doc.text(`EduGate School System — Confidential`, 14, doc.internal.pageSize.height - 3);
+        doc.text(`Page ${i} of ${pageCount}`, 297 - 14, doc.internal.pageSize.height - 3, { align: 'right' });
+    }
+
+    doc.save(`Students_Directory_${now.toISOString().slice(0, 10)}.pdf`);
+
+    btn.innerHTML = '<i class="ph ph-file-pdf"></i> Download PDF';
+    btn.disabled = false;
+    showNotification(`PDF exported with ${res.data.length} students!`, 'success');
+}

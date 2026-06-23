@@ -8,6 +8,8 @@
     
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <script src="js/config.js" defer></script>
     <script src="js/app.js" defer></script>
     <script src="js/students.js" defer></script>
@@ -62,7 +64,12 @@
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                 <input type="text" id="search-student" class="form-control" placeholder="Search student name or adm..." style="max-width: 300px;">
-                <a href="add_student.html" class="btn btn-primary"><i class="ph ph-user-plus"></i> Register New Student</a>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    <button id="download-pdf-btn" class="btn" style="background: linear-gradient(135deg, #e11d48, #be123c); color: white; border: none; display: flex; align-items: center; gap: 0.5rem;" onclick="downloadStudentsPDF()">
+                        <i class="ph ph-file-pdf"></i> Download PDF
+                    </button>
+                    <a href="add_student.html" class="btn btn-primary"><i class="ph ph-user-plus"></i> Register New Student</a>
+                </div>
             </div>
             
             <div class="table-container">
