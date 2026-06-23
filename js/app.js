@@ -61,6 +61,12 @@ function showNotification(message, type = 'success') {
 async function fetchData(url, options = {}) {
     try {
         const fullUrl = url.startsWith('http') ? url : API_BASE_URL + url;
+        
+        options.headers = {
+            ...options.headers,
+            'ngrok-skip-browser-warning': '69420'
+        };
+
         const response = await fetch(fullUrl, options);
         if(!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         return await response.json();

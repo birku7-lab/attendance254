@@ -15,9 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData(addForm);
             
             try {
-                const response = await fetch('api/students.php', {
+                const response = await fetch(API_BASE_URL + 'api/students.php', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    headers: {
+                        'ngrok-skip-browser-warning': '69420'
+                    }
                 });
                 
                 const result = await response.json();
