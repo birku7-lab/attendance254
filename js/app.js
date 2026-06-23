@@ -188,6 +188,7 @@ async function fetchData(url, options = {}) {
             ...options.headers,
             'ngrok-skip-browser-warning': '69420'
         };
+        options.cache = 'no-store';
 
         if (token) {
             options.headers['Authorization'] = 'Bearer ' + token;
