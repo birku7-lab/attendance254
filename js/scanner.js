@@ -1,12 +1,21 @@
-let html5QrcodeScanner;
+let html5QrCode;
 let isProcessing = false;
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize Webcam Scanner
-    html5QrcodeScanner = new Html5QrcodeScanner(
-        "reader", { fps: 10, qrbox: {width: 250, height: 250} });
+    // Initialize Webcam Scanner to automatically ask for permissions and start
+    html5QrCode = new Html5Qrcode("reader");
+    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
     
-    html5QrcodeScanner.render(onScanSuccess, onScanError);
+    html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanError)
+    .catch(err => {
+        document.getElementById('reader').innerHTML = `
+            <div style="padding: 2rem; text-align: center; color: var(--danger);">
+                <i class="ph ph-warning" style="font-size: 2rem;"></i><br>
+                <strong>Camera Access Denied</strong><br>
+                <span style="font-size: 0.9rem;">Please allow camera permissions in your browser settings and refresh the page.</span>
+            </div>
+        `;
+    });
 
     // Initialize USB Scanner listener
     // Keep focus on the hidden input
@@ -35,7 +44,9 @@ document.addEventListener('DOMContentLoaded', () => {
 function onScanSuccess(decodedText, decodedResult) {
     if(isProcessing) return;
     
-    html5QrcodeScanner.pause(true);
+    if(html5QrCode && html5QrCode.getState() === 2 /* SCANNING */) {
+        html5QrCode.pause(true);
+    }
     processScan(decodedText);
 }
 
@@ -114,8 +125,8 @@ async function processScan(qrCode) {
         document.getElementById('scan-status').style.color = 'var(--primary)';
         
         // Re-enable webcam if used
-        if(html5QrcodeScanner.getState() === 2) { // PAUSED
-            html5QrcodeScanner.resume();
+        if(html5QrCode && html5QrCode.getState() === 3 /* PAUSED */) {
+            html5QrCode.resume();
         }
         
         const usbInput = document.getElementById('usb-scanner-input');
