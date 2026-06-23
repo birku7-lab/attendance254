@@ -1,0 +1,5 @@
+ngrok.exe
+ngrok.zip
+uploads/
+node_modules/
+.env

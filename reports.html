@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - EduGate School System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/print.css" media="print">
+    
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="js/config.js" defer></script>
+    <script src="js/app.js" defer></script>
+    <script src="js/reports.js" defer></script>
+</head>
+<body>
+    <aside class="sidebar no-print">
+        <div class="sidebar-header">
+            <div class="sidebar-logo-icon"><i class="ph ph-graduation-cap"></i></div>
+            <div class="sidebar-header-text">
+                <h2>EduGate</h2><p>School System</p>
+            </div>
+        </div>
+        <div class="sidebar-scroll">
+            <div class="nav-section">
+                <div class="nav-section-title">MANAGEMENT</div>
+                <ul class="sidebar-menu">
+                    <li><a href="index.html"><i class="ph ph-squares-four"></i> Dashboard</a></li>
+                    <li><a href="students.html"><i class="ph ph-users-three"></i> Students</a></li>
+                    <li><a href="add_student.html"><i class="ph ph-plus-circle"></i> Add Student</a></li>
+                    <li><a href="scanner.html"><i class="ph ph-scan"></i> Attendance Scanner</a></li>
+                    <li><a href="records.html"><i class="ph ph-list-dashes"></i> Attendance Records</a></li>
+                    <li class="active"><a href="reports.html"><i class="ph ph-file-text"></i> Reports</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">OTHER</div>
+                <ul class="sidebar-menu">
+                    <li><a href="#"><i class="ph ph-gear"></i> Settings</a></li>
+                    <li><a href="#"><i class="ph ph-user"></i> Users</a></li>
+                    <li><a href="#"><i class="ph ph-cloud-arrow-up"></i> Backup</a></li>
+                    <li><a href="#"><i class="ph ph-clock-counter-clockwise"></i> Activity Log</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="sidebar-footer">
+            <img src="https://ui-avatars.com/api/?name=Admin+User&background=4f46e5&color=fff" alt="Admin">
+            <div class="sidebar-footer-info"><h4>Admin User</h4><p>Administrator</p></div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <!-- Print Header -->
+        <div class="print-header">
+            <h1>EduGate Attendance Report</h1>
+            <p id="print-subtitle">Date: ...</p>
+        </div>
+
+        <div class="top-header no-print">
+            <div class="header-left">
+                <button class="mobile-toggle"><i class="ph ph-list"></i></button>
+                <div>
+                    <h1>Generate Reports</h1>
+                    <p>Create and print custom attendance reports.</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-success" onclick="window.print()">
+                    <i class="ph ph-printer"></i> Print Report
+                </button>
+            </div>
+        </div>
+
+        <div class="card no-print" style="margin-bottom: 2rem;">
+            <form id="report-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; align-items: end;">
+                <div>
+                    <label style="font-size: 0.85rem; color: var(--text-muted); display:block; margin-bottom:0.4rem; font-weight: 500;">Report Type</label>
+                    <select name="type" id="report-type" class="form-control">
+                        <option value="complete">Complete List</option>
+                        <option value="present">Present Students Only</option>
+                        <option value="absent">Absent Students Only</option>
+                        <option value="class">Attendance by Class</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size: 0.85rem; color: var(--text-muted); display:block; margin-bottom:0.4rem; font-weight: 500;">Date</label>
+                    <input type="date" name="date" id="report-date" class="form-control" required>
+                </div>
+                <div id="class-filter-container" style="display:none;">
+                    <label style="font-size: 0.85rem; color: var(--text-muted); display:block; margin-bottom:0.4rem; font-weight: 500;">Class</label>
+                    <input type="text" name="class" id="report-class" class="form-control" placeholder="e.g. Grade 8">
+                </div>
+                <div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content:center;">
+                        <i class="ph ph-magic-wand"></i> Generate
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card" style="padding:0; overflow:hidden;">
+            <div class="table-container" style="padding: 1.5rem;">
+                <h3 id="report-title" style="margin-bottom: 1.5rem; color: var(--text-main); font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Report Preview</h3>
+                <table id="report-table">
+                    <thead>
+                        <tr>
+                            <th>Adm No.</th>
+                            <th>Name</th>
+                            <th>Class</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem;">Select criteria and generate report.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

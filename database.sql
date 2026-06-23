@@ -1,0 +1,31 @@
+-- Create Database
+CREATE DATABASE IF NOT EXISTS `school_attendance`;
+USE `school_attendance`;
+
+-- Create Students Table
+CREATE TABLE IF NOT EXISTS `students` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `full_name` varchar(255) NOT NULL,
+  `admission_number` varchar(100) NOT NULL,
+  `class` varchar(100) NOT NULL,
+  `gender` varchar(20) NOT NULL,
+  `photo` varchar(255) DEFAULT NULL,
+  `qr_code` varchar(255) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `admission_number` (`admission_number`),
+  UNIQUE KEY `qr_code` (`qr_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Create Attendance Table
+CREATE TABLE IF NOT EXISTS `attendance` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `student_id` int(11) NOT NULL,
+  `attendance_date` date NOT NULL,
+  `arrival_time` time NOT NULL,
+  `attendance_status` enum('Present','Absent') DEFAULT 'Present',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_daily_attendance` (`student_id`,`attendance_date`),
+  CONSTRAINT `attendance_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students - EduGate School System</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="js/config.js" defer></script>
+    <script src="js/app.js" defer></script>
+    <script src="js/students.js" defer></script>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo-icon"><i class="ph ph-graduation-cap"></i></div>
+            <div class="sidebar-header-text">
+                <h2>EduGate</h2><p>School System</p>
+            </div>
+        </div>
+        <div class="sidebar-scroll">
+            <div class="nav-section">
+                <div class="nav-section-title">MANAGEMENT</div>
+                <ul class="sidebar-menu">
+                    <li><a href="index.html"><i class="ph ph-squares-four"></i> Dashboard</a></li>
+                    <li class="active"><a href="students.html"><i class="ph ph-users-three"></i> Students</a></li>
+                    <li><a href="add_student.html"><i class="ph ph-plus-circle"></i> Add Student</a></li>
+                    <li><a href="scanner.html"><i class="ph ph-scan"></i> Attendance Scanner</a></li>
+                    <li><a href="records.html"><i class="ph ph-list-dashes"></i> Attendance Records</a></li>
+                    <li><a href="reports.html"><i class="ph ph-file-text"></i> Reports</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">OTHER</div>
+                <ul class="sidebar-menu">
+                    <li><a href="#"><i class="ph ph-gear"></i> Settings</a></li>
+                    <li><a href="#"><i class="ph ph-user"></i> Users</a></li>
+                    <li><a href="#"><i class="ph ph-cloud-arrow-up"></i> Backup</a></li>
+                    <li><a href="#"><i class="ph ph-clock-counter-clockwise"></i> Activity Log</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="sidebar-footer">
+            <img src="https://ui-avatars.com/api/?name=Admin+User&background=4f46e5&color=fff" alt="Admin">
+            <div class="sidebar-footer-info"><h4>Admin User</h4><p>Administrator</p></div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="top-header">
+            <div class="header-left">
+                <button class="mobile-toggle"><i class="ph ph-list"></i></button>
+                <div>
+                    <h1>Students Directory</h1>
+                    <p>Manage and view student records</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <input type="text" id="search-student" class="form-control" placeholder="Search student name or adm..." style="max-width: 300px;">
+                <a href="add_student.html" class="btn btn-primary"><i class="ph ph-user-plus"></i> Register New Student</a>
+            </div>
+            
+            <div class="table-container">
+                <table id="students-table">
+                    <thead>
+                        <tr>
+                            <th>Photo</th>
+                            <th>Name</th>
+                            <th>Adm No.</th>
+                            <th>Class</th>
+                            <th>Gender</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data will be loaded here via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
