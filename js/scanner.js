@@ -1,5 +1,33 @@
 let html5QrCode;
 let isProcessing = false;
+let isPausedByUser = false;
+
+function togglePauseResume() {
+    const btn = document.getElementById('pause-resume-btn');
+    if (!html5QrCode) return;
+
+    if (isPausedByUser) {
+        // Resume
+        if(html5QrCode.getState() === 3 /* PAUSED */) {
+            html5QrCode.resume();
+        }
+        isPausedByUser = false;
+        btn.innerHTML = '<i class="ph ph-pause"></i> Pause Scanner';
+        btn.className = 'btn btn-warning';
+        document.getElementById('scan-status').textContent = 'Ready to Scan...';
+        document.getElementById('scan-status').style.color = 'var(--primary)';
+    } else {
+        // Pause
+        if(html5QrCode.getState() === 2 /* SCANNING */) {
+            html5QrCode.pause(true);
+        }
+        isPausedByUser = true;
+        btn.innerHTML = '<i class="ph ph-play"></i> Resume Scanner';
+        btn.className = 'btn btn-success';
+        document.getElementById('scan-status').textContent = 'Scanner Paused by User';
+        document.getElementById('scan-status').style.color = 'var(--warning)';
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize Webcam Scanner to automatically ask for permissions and start
@@ -125,7 +153,8 @@ async function processScan(qrCode) {
         document.getElementById('scan-status').style.color = 'var(--primary)';
         
         // Re-enable webcam if used
-        if(html5QrCode && html5QrCode.getState() === 3 /* PAUSED */) {
+        // Re-enable webcam if used and not paused by user
+        if(html5QrCode && html5QrCode.getState() === 3 /* PAUSED */ && !isPausedByUser) {
             html5QrCode.resume();
         }
         

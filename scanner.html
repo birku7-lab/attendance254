@@ -6,8 +6,8 @@
     <title>Scanner - EduGate School System</title>
     <link rel="stylesheet" href="css/style.css">
     
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web" defer></script>
+    <script src="https://unpkg.com/html5-qrcode" defer></script>
     <script src="js/config.js" defer></script>
     <script src="js/app.js" defer></script>
     <script src="js/scanner.js" defer></script>
@@ -82,6 +82,11 @@
             <div class="camera-section card">
                 <h3 style="margin-bottom: 1rem; text-align: center; color: var(--text-main);">Webcam Scanner</h3>
                 <div id="reader"></div>
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <button id="pause-resume-btn" class="btn btn-warning" onclick="togglePauseResume()" style="padding: 0.8rem 2rem; font-size: 1.1rem; font-weight: 600;">
+                        <i class="ph ph-pause"></i> Pause Scanner
+                    </button>
+                </div>
                 <div style="margin-top: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.9rem; background: var(--bg-color); padding: 1rem; border-radius: var(--radius-md);">
                     <i class="ph ph-info" style="font-size: 1.2rem; color: var(--primary); vertical-align: middle;"></i> Ensure camera permissions are granted.<br>
                     <strong>USB Scanner:</strong> Just scan anytime, it runs in the background.
