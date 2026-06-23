@@ -88,13 +88,13 @@ async function loadDashboardStats() {
             document.getElementById('summary-last-scan').textContent = '-';
         }
 
-        // Initialize Charts with mocked dynamic data (since we need historical data not currently in dashboard API)
-        initLineChart(data.attendance_percentage);
+        // Initialize Charts with accurate data
+        initLineChart(data.weekly_data);
         initDonutChart(data.total_students);
     }
 }
 
-function initLineChart(currentPercentage) {
+function initLineChart(weeklyData) {
     const ctx = document.getElementById('attendanceLineChart');
     if (!ctx) return;
 
@@ -107,16 +107,16 @@ function initLineChart(currentPercentage) {
     gradient.addColorStop(0, 'rgba(79, 70, 229, 0.4)');
     gradient.addColorStop(1, 'rgba(79, 70, 229, 0.0)');
 
-    // Mock weekly data ending with today's percentage
-    const mockData = [60, 75, 82, 65, 68, 79, parseFloat(currentPercentage) || 0];
+    // Use accurate weekly data (Monday to Saturday)
+    const actualData = weeklyData || [0, 0, 0, 0, 0, 0];
 
     lineChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
             datasets: [{
                 label: 'Attendance %',
-                data: mockData,
+                data: actualData,
                 borderColor: '#4f46e5',
                 backgroundColor: gradient,
                 borderWidth: 3,

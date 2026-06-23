@@ -28,6 +28,18 @@ try {
                            ORDER BY a.arrival_time DESC LIMIT 10");
     $stmt->execute([$date]);
     $recent_scans = $stmt->fetchAll();
+
+    // Calculate real historical data for Mon-Sat of the current week
+    $weekly_data = [];
+    $start_of_week = date('Y-m-d', strtotime('monday this week'));
+    for ($i = 0; $i < 6; $i++) {
+        $day_date = date('Y-m-d', strtotime("$start_of_week +$i days"));
+        $stmt = $pdo->prepare("SELECT COUNT(*) as present FROM attendance WHERE attendance_date = ? AND attendance_status = 'Present'");
+        $stmt->execute([$day_date]);
+        $day_present = $stmt->fetch()['present'];
+        $day_percentage = $total_students > 0 ? round(($day_present / $total_students) * 100, 1) : 0;
+        $weekly_data[] = $day_percentage;
+    }
     
     echo json_encode([
         "status" => "success",
@@ -36,7 +48,8 @@ try {
             "present_today" => $present_today,
             "absent_today" => $absent_today,
             "attendance_percentage" => $percentage,
-            "recent_scans" => $recent_scans
+            "recent_scans" => $recent_scans,
+            "weekly_data" => $weekly_data
         ]
     ]);
 } catch (PDOException $e) {
