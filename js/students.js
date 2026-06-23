@@ -103,6 +103,56 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Edit Student Form Submission
+    const editForm = document.getElementById('edit-student-form');
+    if (editForm) {
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = editForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span>⏳</span> Saving...';
+            submitBtn.disabled = true;
+
+            const formData = new FormData(editForm);
+            
+            // Client-side image compression
+            const photoInput = document.getElementById('edit-photo');
+            if (photoInput && photoInput.files[0]) {
+                const file = photoInput.files[0];
+                try {
+                    const compressedBlob = await compressImage(file, 800, 800, 0.8);
+                    formData.set('photo', compressedBlob, file.name);
+                } catch(e) {
+                    console.error("Image compression failed.", e);
+                }
+            }
+            
+            try {
+                const response = await fetch(API_BASE_URL + 'api/students.php?action=edit', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'ngrok-skip-browser-warning': '69420' }
+                });
+                
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showNotification(result.message, 'success');
+                    closeEditModal();
+                    loadStudents(); // Refresh table
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                showNotification('An error occurred. Check console.', 'error');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+    }
+
     // Load Students List
     const studentsTableBody = document.querySelector('#students-table tbody');
     if (studentsTableBody) {
@@ -146,7 +196,11 @@ async function loadStudents() {
                 <td>${s.class}</td>
                 <td>${s.gender}</td>
                 <td>
-                    <button class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewProfile(${s.id})">Profile & QR</button>
+                    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                        <button class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewProfile(${s.id})">Profile & QR</button>
+                        <button class="btn btn-warning" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: var(--warning); border:none;" onclick="editStudent(${s.id})">Edit</button>
+                        <button class="btn btn-danger" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: var(--danger); border:none;" onclick="deleteStudent(${s.id})">Delete</button>
+                    </div>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -486,4 +540,55 @@ async function downloadStudentsPDF(filterType = 'all') {
     }
 
     closePdfModal();
+}
+
+// Edit and Delete functions
+async function editStudent(id) {
+    const res = await fetchData(`api/students.php?action=get&id=${id}`);
+    if (res && res.status === 'success') {
+        const s = res.data;
+        document.getElementById('edit-id').value = s.id;
+        document.getElementById('edit-full-name').value = s.full_name;
+        document.getElementById('edit-admission-number').value = s.admission_number;
+        document.getElementById('edit-class').value = s.class;
+        document.getElementById('edit-gender').value = s.gender;
+        document.getElementById('edit-photo').value = ''; // Reset file input
+        
+        const modal = document.getElementById('edit-modal');
+        modal.style.display = 'flex';
+        // Allow tiny delay for display:flex to apply before transition
+        setTimeout(() => modal.style.pointerEvents = 'auto', 10);
+    } else {
+        showNotification("Failed to load student data.", "error");
+    }
+}
+
+function closeEditModal() {
+    const modal = document.getElementById('edit-modal');
+    modal.style.pointerEvents = 'none';
+    modal.style.display = 'none';
+}
+
+async function deleteStudent(id) {
+    if (confirm("WARNING: Are you sure you want to completely delete this student? All their attendance records will be permanently erased. This cannot be undone!")) {
+        try {
+            const formData = new FormData();
+            formData.append('id', id);
+            const response = await fetch(API_BASE_URL + 'api/students.php?action=delete', {
+                method: 'POST',
+                body: formData,
+                headers: { 'ngrok-skip-browser-warning': '69420' }
+            });
+            const result = await response.json();
+            if (result.status === 'success') {
+                showNotification(result.message, 'success');
+                loadStudents();
+            } else {
+                showNotification(result.message, 'error');
+            }
+        } catch (error) {
+            console.error(error);
+            showNotification('Failed to delete student.', 'error');
+        }
+    }
 }

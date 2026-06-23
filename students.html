@@ -124,5 +124,48 @@
             </div>
         </div>
     </div>
+
+    <!-- Edit Student Modal -->
+    <div id="edit-modal" style="position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 1000; display: none; align-items: center; justify-content: center; pointer-events: none;">
+        <div class="glass-card" style="width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; position: relative; pointer-events: auto;">
+            <button onclick="closeEditModal()" style="position: absolute; right: 15px; top: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--danger);">&times;</button>
+            <h2 class="mb-2">Edit Student</h2>
+            <form id="edit-student-form">
+                <input type="hidden" id="edit-id" name="id">
+                <div class="form-group">
+                    <label for="edit-full-name">Full Name</label>
+                    <input type="text" id="edit-full-name" name="full_name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-admission-number">Admission Number</label>
+                    <input type="text" id="edit-admission-number" name="admission_number" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-class">Class/Grade</label>
+                    <select id="edit-class" name="class" class="form-control" required>
+                        <option value="">Select Class</option>
+                        <option value="Grade 8">Grade 8</option>
+                        <option value="Grade 9">Grade 9</option>
+                        <option value="Grade 10">Grade 10</option>
+                        <option value="Grade 11">Grade 11</option>
+                        <option value="Grade 12">Grade 12</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-gender">Gender</label>
+                    <select id="edit-gender" name="gender" class="form-control" required>
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-photo">New Photo (Optional)</label>
+                    <input type="file" id="edit-photo" name="photo" class="form-control" accept="image/*">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Save Changes</button>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

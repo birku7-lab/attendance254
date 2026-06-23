@@ -5,7 +5,83 @@ require_once 'config.php';
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Add student
+    if ($action === 'delete') {
+        $id = $_POST['id'] ?? 0;
+        try {
+            // Get photo path to delete the file
+            $stmt = $pdo->prepare("SELECT photo FROM students WHERE id = ?");
+            $stmt->execute([$id]);
+            $student = $stmt->fetch();
+            if ($student && $student['photo']) {
+                $photo_file = '../' . $student['photo'];
+                if (file_exists($photo_file)) {
+                    unlink($photo_file);
+                }
+            }
+            // Delete student
+            $stmt = $pdo->prepare("DELETE FROM students WHERE id = ?");
+            $stmt->execute([$id]);
+            echo json_encode(["status" => "success", "message" => "Student deleted successfully."]);
+        } catch (PDOException $e) {
+            echo json_encode(["status" => "error", "message" => "Database error: " . $e->getMessage()]);
+        }
+        exit;
+    } else if ($action === 'edit') {
+        $id = $_POST['id'] ?? 0;
+        $full_name = $_POST['full_name'] ?? '';
+        $admission_number = $_POST['admission_number'] ?? '';
+        $class = $_POST['class'] ?? '';
+        $gender = $_POST['gender'] ?? '';
+
+        if(empty($full_name) || empty($admission_number) || empty($class) || empty($gender) || empty($id)) {
+            echo json_encode(["status" => "error", "message" => "All fields are required."]);
+            exit;
+        }
+
+        // Handle optional photo upload
+        $photo_query_part = "";
+        $params = [$full_name, $admission_number, $class, $gender, $id];
+        
+        if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+            $upload_dir = '../uploads/photos/';
+            if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
+            $file_ext = strtolower(pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION));
+            $allowed_exts = ['jpg', 'jpeg', 'png', 'gif'];
+            if (in_array($file_ext, $allowed_exts)) {
+                $filename = uniqid('stu_') . '.' . $file_ext;
+                if (move_uploaded_file($_FILES['photo']['tmp_name'], $upload_dir . $filename)) {
+                    $photo_path = 'uploads/photos/' . $filename;
+                    $photo_query_part = ", photo = ?";
+                    
+                    // Delete old photo
+                    $stmt = $pdo->prepare("SELECT photo FROM students WHERE id = ?");
+                    $stmt->execute([$id]);
+                    $old_student = $stmt->fetch();
+                    if ($old_student && $old_student['photo'] && file_exists('../' . $old_student['photo'])) {
+                        unlink('../' . $old_student['photo']);
+                    }
+                    
+                    // Update params order: full_name, adm, class, gender, photo, id
+                    $params = [$full_name, $admission_number, $class, $gender, $photo_path, $id];
+                }
+            }
+        }
+
+        try {
+            $stmt = $pdo->prepare("UPDATE students SET full_name = ?, admission_number = ?, class = ?, gender = ? $photo_query_part WHERE id = ?");
+            $stmt->execute($params);
+            echo json_encode(["status" => "success", "message" => "Student updated successfully."]);
+        } catch (PDOException $e) {
+            if ($e->getCode() == 23000) {
+                echo json_encode(["status" => "error", "message" => "A student with this admission number already exists."]);
+            } else {
+                echo json_encode(["status" => "error", "message" => "Database error: " . $e->getMessage()]);
+            }
+        }
+        exit;
+    }
+
+    // Default to Add student
     $full_name = $_POST['full_name'] ?? '';
     $admission_number = $_POST['admission_number'] ?? '';
     $class = $_POST['class'] ?? '';
