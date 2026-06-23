@@ -13,7 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const usbInput = document.getElementById('usb-scanner-input');
     
     document.addEventListener('click', () => {
-        if(usbInput) usbInput.focus();
+        // Only focus if it's not a touch device to prevent mobile keyboard from popping up
+        if(usbInput && !('ontouchstart' in window)) usbInput.focus();
     });
 
     if (usbInput) {
