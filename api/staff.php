@@ -9,7 +9,7 @@ if(strpos($token, 'Bearer ') === 0) {
     $token = substr($token, 7);
 }
 
-$stmt = $pdo->prepare("SELECT role FROM users WHERE token = ?");
+$stmt = $pdo->prepare("SELECT id, role FROM users WHERE token = ?");
 $stmt->execute([$token]);
 $currentUser = $stmt->fetch();
 
@@ -87,6 +87,11 @@ try {
     elseif ($action === 'delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $id = $_POST['id'] ?? 0;
         
+        if ($id == $currentUser['id']) {
+            echo json_encode(['status' => 'error', 'message' => 'You cannot delete your own account!']);
+            exit;
+        }
+
         // Prevent deleting oneself or the last admin
         if ($id) {
             $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");

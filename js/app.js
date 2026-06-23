@@ -204,7 +204,17 @@ async function fetchData(url, options = {}) {
 
         const response = await fetch(finalUrl, options);
         if(!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return await response.json();
+        
+        const json = await response.json();
+        
+        // Auto-logout if token is dead/unauthorized
+        if (json && json.message && json.message.toLowerCase().includes('unauthorized')) {
+            localStorage.clear();
+            window.location.href = 'login.html';
+            return { status: 'error', message: 'Session expired. Please log in again.' };
+        }
+        
+        return json;
     } catch (e) {
         console.error('Fetch error:', e);
         showNotification(e.message, 'error');
