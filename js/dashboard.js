@@ -54,7 +54,7 @@ async function loadDashboardStats() {
 
             // Render up to 5 scans
             data.recent_scans.slice(0, 5).forEach(scan => {
-                const photoSrc = scan.photo ? scan.photo : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(scan.full_name) + '&background=random';
+                const photoSrc = scan.photo ? (API_BASE_URL + scan.photo) : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(scan.full_name) + '&background=random';
                 
                 // Format time
                 const [h, m] = scan.arrival_time.split(':');
