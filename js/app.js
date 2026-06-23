@@ -190,11 +190,18 @@ async function fetchData(url, options = {}) {
         };
         options.cache = 'no-store';
 
+        let finalUrl = fullUrl;
+        try {
+            const urlObj = new URL(fullUrl);
+            urlObj.searchParams.append('_t', Date.now());
+            finalUrl = urlObj.toString();
+        } catch(e){}
+
         if (token) {
             options.headers['Authorization'] = 'Bearer ' + token;
         }
 
-        const response = await fetch(fullUrl, options);
+        const response = await fetch(finalUrl, options);
         if(!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         return await response.json();
     } catch (e) {
