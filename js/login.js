@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const email = document.getElementById('email').value;
+        const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
         
         errorMsg.style.display = 'none';
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const fd = new FormData();
-            fd.append('email', email);
+            fd.append('username', username);
             fd.append('password', password);
 
             const res = await fetch(API_BASE_URL + 'api/auth.php?action=login', {

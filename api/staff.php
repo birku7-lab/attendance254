@@ -22,33 +22,33 @@ $action = $_GET['action'] ?? 'list';
 
 try {
     if ($action === 'list') {
-        $stmt = $pdo->query("SELECT id, name, email, role, permissions, created_at FROM users");
+        $stmt = $pdo->query("SELECT id, name, username, role, permissions, created_at FROM users");
         $staff = $stmt->fetchAll(PDO::FETCH_ASSOC);
         echo json_encode(['status' => 'success', 'data' => $staff]);
     } 
     elseif ($action === 'add' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $name = $_POST['name'] ?? '';
-        $email = $_POST['email'] ?? '';
+        $username = $_POST['username'] ?? '';
         $password = $_POST['password'] ?? '';
         $role = $_POST['role'] ?? 'Staff';
         $permissions = $_POST['permissions'] ?? '[]'; // JSON array string
 
-        if (!$name || !$email || !$password) {
+        if (!$name || !$username || !$password) {
             echo json_encode(['status' => 'error', 'message' => 'All fields are required']);
             exit;
         }
 
-        // Check if email exists
-        $check = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-        $check->execute([$email]);
+        // Check if username exists
+        $check = $pdo->prepare("SELECT id FROM users WHERE username = ?");
+        $check->execute([$username]);
         if($check->fetch()) {
-            echo json_encode(['status' => 'error', 'message' => 'Email already exists']);
+            echo json_encode(['status' => 'error', 'message' => 'Username already exists']);
             exit;
         }
 
         $hash = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $pdo->prepare("INSERT INTO users (name, email, password_hash, role, permissions) VALUES (?, ?, ?, ?, ?)");
-        $stmt->execute([$name, $email, $hash, $role, $permissions]);
+        $stmt = $pdo->prepare("INSERT INTO users (name, username, password_hash, role, permissions) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$name, $username, $hash, $role, $permissions]);
         
         echo json_encode(['status' => 'success', 'message' => 'Staff added successfully']);
     }

@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS `holidays` (
 CREATE TABLE IF NOT EXISTS `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
-  `email` varchar(255) NOT NULL UNIQUE,
+  `username` varchar(255) NOT NULL UNIQUE,
   `password_hash` varchar(255) NOT NULL,
   `token` varchar(255) DEFAULT NULL,
   `role` enum('Admin','Staff') DEFAULT 'Staff',

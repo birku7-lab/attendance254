@@ -52,7 +52,7 @@ async function loadStaff() {
                                 <strong>${staff.name}</strong>
                             </div>
                         </td>
-                        <td>${staff.email}</td>
+                        <td>${staff.username}</td>
                         <td><strong>${staff.role}</strong></td>
                         <td><div style="display:flex; flex-wrap:wrap; max-width:250px;">${permsHtml}</div></td>
                         <td>

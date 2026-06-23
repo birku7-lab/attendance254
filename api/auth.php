@@ -6,16 +6,16 @@ $action = $_GET['action'] ?? '';
 
 try {
     if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        $email = $_POST['email'] ?? '';
+        $username = $_POST['username'] ?? '';
         $password = $_POST['password'] ?? '';
 
-        if (!$email || !$password) {
-            echo json_encode(['status' => 'error', 'message' => 'Email and password are required']);
+        if (!$username || !$password) {
+            echo json_encode(['status' => 'error', 'message' => 'Username and password are required']);
             exit;
         }
 
-        $stmt = $pdo->prepare("SELECT id, name, email, password_hash, role, permissions FROM users WHERE email = ?");
-        $stmt->execute([$email]);
+        $stmt = $pdo->prepare("SELECT id, name, username, password_hash, role, permissions FROM users WHERE username = ?");
+        $stmt->execute([$username]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($user && password_verify($password, $user['password_hash'])) {
@@ -45,7 +45,7 @@ try {
             exit;
         }
 
-        $stmt = $pdo->prepare("SELECT id, name, email, role, permissions FROM users WHERE token = ?");
+        $stmt = $pdo->prepare("SELECT id, name, username, role, permissions FROM users WHERE token = ?");
         $stmt->execute([$token]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
