@@ -22,13 +22,58 @@ try {
         student_id INT NOT NULL,
         attendance_date DATE NOT NULL,
         arrival_time TIME NOT NULL,
-        attendance_status ENUM('Present', 'Absent') DEFAULT 'Present',
+        attendance_status ENUM('Present', 'Absent', 'Late') DEFAULT 'Present',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
         UNIQUE KEY unique_daily_attendance (student_id, attendance_date)
     )");
 
-    echo "Database and tables initialized successfully.";
+    // Create Settings Table
+    $pdo->exec("CREATE TABLE IF NOT EXISTS settings (
+        setting_key VARCHAR(100) PRIMARY KEY,
+        setting_value TEXT
+    )");
+
+    // Create Holidays Table
+    $pdo->exec("CREATE TABLE IF NOT EXISTS holidays (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        start_date DATE NOT NULL,
+        end_date DATE NOT NULL,
+        description TEXT
+    )");
+
+    // Insert Default Settings
+    $default_settings = [
+        'school_name' => 'EduGate High School',
+        'school_motto' => 'Excellence and Integrity',
+        'school_address' => '123 Education Lane',
+        'school_phone' => '+1 234 567 890',
+        'school_email' => 'admin@edugate.com',
+        'academic_year' => '2026/2027',
+        'current_term' => 'Term 1',
+        'school_opening_time' => '07:00',
+        'late_arrival_time' => '07:30',
+        'attendance_cutoff_time' => '09:00',
+        'theme' => 'auto',
+        'accent_color' => 'primary',
+        'school_days' => '{"Mon":true,"Tue":true,"Wed":true,"Thu":true,"Fri":true,"Sat":false,"Sun":false}',
+        'dashboard_layout' => '{"cards":true,"live_scan":true,"charts":true,"quick_actions":true}',
+        'notifications_success' => 'true',
+        'notifications_error' => 'true',
+        'qr_size' => '250',
+        'qr_margin' => '4',
+        'qr_correction' => 'M'
+    ];
+
+    $stmt = $pdo->prepare("INSERT IGNORE INTO settings (setting_key, setting_value) VALUES (?, ?)");
+    foreach ($default_settings as $key => $value) {
+        $stmt->execute([$key, $value]);
+    }
+
+    $pdo->exec("ALTER TABLE attendance MODIFY COLUMN attendance_status ENUM('Present', 'Absent', 'Late') DEFAULT 'Present'");
+
+    echo "Database and tables initialized successfully with settings.";
 } catch (PDOException $e) {
     echo "Setup failed: " . $e->getMessage();
 }

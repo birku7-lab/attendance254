@@ -18,10 +18,52 @@ document.addEventListener('DOMContentLoaded', () => {
             link.parentElement.classList.add('active');
         }
     });
+
+    loadSystemSettings();
 });
+
+async function loadSystemSettings() {
+    try {
+        const res = await fetchData('api/settings.php?action=get');
+        if (res && res.status === 'success') {
+            const settings = res.data;
+            window.appSettings = settings;
+
+            // Apply Theme
+            if (settings.theme === 'dark' || (settings.theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.body.classList.add('dark-theme');
+            } else {
+                document.body.classList.remove('dark-theme');
+            }
+
+            // Apply Accent Color
+            const root = document.documentElement;
+            const accents = {
+                'blue': '#3b82f6',
+                'purple': '#8b5cf6',
+                'green': '#10b981',
+                'orange': '#f59e0b',
+                'red': '#ef4444',
+                'pink': '#ec4899',
+                'teal': '#14b8a6',
+                'indigo': '#4f46e5'
+            };
+            if (settings.accent_color && accents[settings.accent_color]) {
+                root.style.setProperty('--primary', accents[settings.accent_color]);
+            }
+        }
+    } catch(e) {
+        console.error("Failed to load settings:", e);
+    }
+}
 
 // Global Notification System
 function showNotification(message, type = 'success') {
+    if (window.appSettings) {
+        if (type === 'success' && window.appSettings.notifications_success === 'false') return;
+        if (type === 'error' && window.appSettings.notifications_error === 'false') return;
+    }
+
     let container = document.getElementById('notification-container');
     if (!container) {
         container = document.createElement('div');
@@ -32,11 +74,6 @@ function showNotification(message, type = 'success') {
     const notif = document.createElement('div');
     notif.className = `notification ${type}`;
     
-    let icon = 'CheckCircle';
-    if(type === 'error') icon = 'XCircle';
-    if(type === 'warning') icon = 'AlertTriangle';
-
-    // Using feather icons placeholder since we haven't loaded feather yet, just use text or simple unicode
     const iconHtml = type === 'success' ? '✅' : (type === 'error' ? '❌' : '⚠️');
 
     notif.innerHTML = `

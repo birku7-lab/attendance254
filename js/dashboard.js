@@ -26,6 +26,13 @@ let lineChartInstance = null;
 let donutChartInstance = null;
 
 async function loadDashboardStats() {
+    if (window.appSettings) {
+        if(window.appSettings.dash_cards === 'false') document.querySelector('.dashboard-grid').style.display = 'none';
+        if(window.appSettings.dash_live_scan === 'false') document.getElementById('live-scans-container').closest('.card').style.display = 'none';
+        if(window.appSettings.dash_charts === 'false') document.getElementById('attendanceLineChart').closest('.card').style.display = 'none';
+        if(window.appSettings.dash_quick_actions === 'false') document.querySelector('.quick-actions-grid').closest('.card').style.display = 'none';
+    }
+
     const res = await fetchData('api/dashboard.php');
     if (res && res.status === 'success') {
         const data = res.data;

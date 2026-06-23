@@ -23,9 +23,26 @@ CREATE TABLE IF NOT EXISTS `attendance` (
   `student_id` int(11) NOT NULL,
   `attendance_date` date NOT NULL,
   `arrival_time` time NOT NULL,
-  `attendance_status` enum('Present','Absent') DEFAULT 'Present',
+  `attendance_status` enum('Present','Absent','Late') DEFAULT 'Present',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique_daily_attendance` (`student_id`,`attendance_date`),
   CONSTRAINT `attendance_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Create Settings Table
+CREATE TABLE IF NOT EXISTS `settings` (
+  `setting_key` varchar(100) NOT NULL,
+  `setting_value` text DEFAULT NULL,
+  PRIMARY KEY (`setting_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Create Holidays Table
+CREATE TABLE IF NOT EXISTS `holidays` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `description` text DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
