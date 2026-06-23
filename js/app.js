@@ -24,13 +24,12 @@
                 footerInfo.innerHTML = `<h4>${userName}</h4><p>${role}</p>`;
             }
 
-            // If not "all", hide unauthorized links
+            // If not "all", hide unauthorized links and enforce page access
             if (!permissions.includes('all')) {
                 const menuLinks = document.querySelectorAll('.sidebar-menu a');
                 menuLinks.forEach(link => {
                     const href = link.getAttribute('href');
-                    if (href && href !== '#' && href !== 'index.html') {
-                        // e.g. "scanner.html" -> "scanner"
+                    if (href && href !== '#') {
                         const pageName = href.replace('.html', '');
                         if (!permissions.includes(pageName)) {
                             link.parentElement.style.display = 'none';
@@ -45,6 +44,22 @@
                         section.style.display = 'none';
                     }
                 });
+
+                // Page-level protection: check if current page is allowed
+                const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+                const currentPageName = currentPath.replace('.html', '');
+                
+                // Allow login.html and empty paths
+                if (currentPath !== 'login.html' && currentPath !== '') {
+                    if (!permissions.includes(currentPageName)) {
+                        // Redirect to the first allowed page, or login if none
+                        if (permissions.length > 0) {
+                            window.location.href = permissions[0] + '.html';
+                        } else {
+                            window.location.href = 'login.html';
+                        }
+                    }
+                }
             }
             
             // Add Logout Button
