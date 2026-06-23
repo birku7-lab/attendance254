@@ -1,6 +1,6 @@
 // Change this to your ngrok URL before pushing to GitHub!
 // Example: const PROD_API_URL = 'https://1234-abcd.ngrok-free.app/school attendance/';
-const PROD_API_URL = 'https://YOUR_NGROK_URL_HERE.ngrok-free.app/school attendance/';
+const PROD_API_URL = 'https://honest-feelings-potato-moderate.trycloudflare.com/school attendance/';
 
 // Automatically determine base URL based on environment
 // In local development, we use relative paths. In production (Vercel), we use the Ngrok URL.
