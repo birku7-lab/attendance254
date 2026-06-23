@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Management - EduGate</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="js/config.js" defer></script>
+    <script src="js/app.js" defer></script>
+    <script src="js/staff.js" defer></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo-icon"><i class="ph ph-graduation-cap"></i></div>
+            <div class="sidebar-header-text">
+                <h2>EduGate</h2>
+                <p>Attendance System</p>
+            </div>
+        </div>
+        
+        <div class="sidebar-scroll">
+            <div class="nav-section">
+                <div class="nav-section-title">MAIN MENU</div>
+                <ul class="sidebar-menu">
+                    <li><a href="index.html"><i class="ph ph-squares-four"></i> Dashboard</a></li>
+                    <li><a href="scanner.html"><i class="ph ph-scan"></i> Scanner</a></li>
+                    <li><a href="records.html"><i class="ph ph-list-dashes"></i> Records</a></li>
+                </ul>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">MANAGEMENT</div>
+                <ul class="sidebar-menu">
+                    <li><a href="students.html"><i class="ph ph-users"></i> Students</a></li>
+                    <li><a href="add_student.html"><i class="ph ph-user-plus"></i> Add Student</a></li>
+                    <li><a href="reports.html"><i class="ph ph-chart-bar"></i> Reports</a></li>
+                </ul>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">SYSTEM</div>
+                <ul class="sidebar-menu">
+                    <li><a href="settings.html"><i class="ph ph-gear"></i> Settings</a></li>
+                    <li class="active"><a href="staff.html"><i class="ph ph-user-gear"></i> Staff Management</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="sidebar-footer">
+            <img src="https://ui-avatars.com/api/?name=User&background=4f46e5&color=fff" alt="User" id="sidebar-user-avatar">
+            <div class="sidebar-footer-info">
+                <h4>User</h4>
+                <p>Role</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <button class="mobile-toggle">
+            <i class="ph ph-list"></i>
+        </button>
+        
+        <div class="top-header">
+            <div class="header-left">
+                <h1>Staff Management</h1>
+                <p>Manage system users, passwords, and feature permissions.</p>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-primary" onclick="openAddModal()">
+                    <i class="ph ph-plus"></i> Add New Staff
+                </button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="table-container">
+                <table id="staff-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email Address</th>
+                            <th>Role</th>
+                            <th>Permissions</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="staff-list">
+                        <!-- Fetched from JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Staff Modal -->
+    <div id="add-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Add Staff Member</h2>
+                <span class="close" onclick="closeAddModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="add-staff-form">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Account Role</label>
+                        <select name="role" class="form-control" id="role-select">
+                            <option value="Staff">Staff</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="permissions-container">
+                        <label>Allowed Features</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top:10px; background:var(--bg-color); padding:1rem; border-radius:var(--radius-md);">
+                            <label><input type="checkbox" class="perm-check" value="index"> Dashboard</label>
+                            <label><input type="checkbox" class="perm-check" value="scanner"> Scanner</label>
+                            <label><input type="checkbox" class="perm-check" value="records"> Records</label>
+                            <label><input type="checkbox" class="perm-check" value="students"> View Students</label>
+                            <label><input type="checkbox" class="perm-check" value="add_student"> Add Student</label>
+                            <label><input type="checkbox" class="perm-check" value="reports"> Reports</label>
+                            <label><input type="checkbox" class="perm-check" value="settings"> Settings</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width:100%; margin-top:20px;">Create Account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

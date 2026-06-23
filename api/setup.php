@@ -71,6 +71,22 @@ try {
         $stmt->execute([$key, $value]);
     }
 
+    // Create Users Table
+    $pdo->exec("CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        password_hash VARCHAR(255) NOT NULL,
+        token VARCHAR(255) DEFAULT NULL,
+        role ENUM('Admin', 'Staff') DEFAULT 'Staff',
+        permissions TEXT DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+
+    // Seed default admin
+    $admin_password = password_hash('admin123', PASSWORD_DEFAULT);
+    $pdo->exec("INSERT IGNORE INTO users (name, email, password_hash, role, permissions) VALUES ('Admin User', 'admin@edugate.com', '$admin_password', 'Admin', '[\"all\"]')");
+
     $pdo->exec("ALTER TABLE attendance MODIFY COLUMN attendance_status ENUM('Present', 'Absent', 'Late') DEFAULT 'Present'");
 
     echo "Database and tables initialized successfully with settings.";

@@ -1,3 +1,72 @@
+// Global Auth Check
+(function checkAuth() {
+    const isLoginPage = window.location.pathname.endsWith('login.html');
+    const token = localStorage.getItem('auth_token');
+    
+    if (!token && !isLoginPage) {
+        window.location.href = 'login.html';
+        return; // Stop execution
+    }
+    
+    if (token && !isLoginPage) {
+        // Enforce Permissions on Sidebar
+        window.addEventListener('DOMContentLoaded', () => {
+            const permsRaw = localStorage.getItem('user_permissions') || '[]';
+            let permissions = [];
+            try { permissions = JSON.parse(permsRaw); } catch(e){}
+            
+            const role = localStorage.getItem('user_role');
+            
+            // Render user profile in footer
+            const footerInfo = document.querySelector('.sidebar-footer-info');
+            if (footerInfo) {
+                const userName = localStorage.getItem('user_name') || (role === 'Admin' ? 'Admin' : 'Staff');
+                footerInfo.innerHTML = `<h4>${userName}</h4><p>${role}</p>`;
+            }
+
+            // If not "all", hide unauthorized links
+            if (!permissions.includes('all')) {
+                const menuLinks = document.querySelectorAll('.sidebar-menu a');
+                menuLinks.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && href !== '#' && href !== 'index.html') {
+                        // e.g. "scanner.html" -> "scanner"
+                        const pageName = href.replace('.html', '');
+                        if (!permissions.includes(pageName)) {
+                            link.parentElement.style.display = 'none';
+                        }
+                    }
+                });
+
+                // Also hide the entire Management/System section if all children are hidden
+                document.querySelectorAll('.nav-section').forEach(section => {
+                    const visibleLinks = section.querySelectorAll('li:not([style*="display: none"])');
+                    if (visibleLinks.length === 0) {
+                        section.style.display = 'none';
+                    }
+                });
+            }
+            
+            // Add Logout Button
+            const sidebarScroll = document.querySelector('.sidebar-scroll');
+            if(sidebarScroll) {
+                const logoutSection = document.createElement('div');
+                logoutSection.className = 'nav-section';
+                logoutSection.innerHTML = `<ul class="sidebar-menu"><li><a href="#" id="logout-btn" style="color:#ef4444;"><i class="ph ph-sign-out"></i> Logout</a></li></ul>`;
+                sidebarScroll.appendChild(logoutSection);
+                
+                document.getElementById('logout-btn').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem('auth_token');
+                    localStorage.removeItem('user_role');
+                    localStorage.removeItem('user_permissions');
+                    window.location.href = 'login.html';
+                });
+            }
+        });
+    }
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
     // Mobile Sidebar Toggle
     const toggleBtn = document.querySelector('.mobile-toggle');
@@ -98,11 +167,16 @@ function showNotification(message, type = 'success') {
 async function fetchData(url, options = {}) {
     try {
         const fullUrl = url.startsWith('http') ? url : API_BASE_URL + url;
+        const token = localStorage.getItem('auth_token');
         
         options.headers = {
             ...options.headers,
             'ngrok-skip-browser-warning': '69420'
         };
+
+        if (token) {
+            options.headers['Authorization'] = 'Bearer ' + token;
+        }
 
         const response = await fetch(fullUrl, options);
         if(!response.ok) throw new Error(`HTTP error! status: ${response.status}`);

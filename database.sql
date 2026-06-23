@@ -46,3 +46,16 @@ CREATE TABLE IF NOT EXISTS `holidays` (
   `description` text DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Create Users Table
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL UNIQUE,
+  `password_hash` varchar(255) NOT NULL,
+  `token` varchar(255) DEFAULT NULL,
+  `role` enum('Admin','Staff') DEFAULT 'Staff',
+  `permissions` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
