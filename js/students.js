@@ -233,132 +233,199 @@ function printQR(name, adm) {
     printWindow.document.close();
 }
 
-async function downloadStudentsPDF() {
-    const btn = document.getElementById('download-pdf-btn');
-    btn.innerHTML = '<i class="ph ph-spinner"></i> Generating...';
-    btn.disabled = true;
-
-    const res = await fetchData('api/students.php?action=list');
-
-    if (!res || res.status !== 'success' || res.data.length === 0) {
-        showNotification('No students found to export.', 'error');
-        btn.innerHTML = '<i class="ph ph-file-pdf"></i> Download PDF';
-        btn.disabled = false;
-        return;
+function openPdfModal() {
+    const modal = document.getElementById('pdf-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        setTimeout(() => {
+            modal.style.opacity = '1';
+        }, 10);
     }
+}
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+function closePdfModal() {
+    const modal = document.getElementById('pdf-modal');
+    if (modal) {
+        modal.style.opacity = '0';
+        setTimeout(() => {
+            modal.style.display = 'none';
+            // Reset button states in case they were left loading
+            document.getElementById('btn-pdf-all').innerHTML = '<i class="ph ph-users-three" style="font-size: 1.5rem; margin-right: 0.5rem;"></i><div><strong style="display: block;">All Students</strong><span style="font-size: 0.8rem; font-weight: normal; opacity: 0.9;">Complete directory of all registered students</span></div>';
+            document.getElementById('btn-pdf-present').innerHTML = '<i class="ph ph-check-circle" style="font-size: 1.5rem; margin-right: 0.5rem;"></i><div><strong style="display: block;">Present Today</strong><span style="font-size: 0.8rem; font-weight: normal; opacity: 0.9;">Students who have already checked in today</span></div>';
+            document.getElementById('btn-pdf-absent').innerHTML = '<i class="ph ph-x-circle" style="font-size: 1.5rem; margin-right: 0.5rem;"></i><div><strong style="display: block;">Absent Today</strong><span style="font-size: 0.8rem; font-weight: normal; opacity: 0.9;">Students who have not yet checked in today</span></div>';
+        }, 300);
+    }
+}
 
-    // Header background
-    doc.setFillColor(79, 70, 229); // primary indigo
-    doc.rect(0, 0, 297, 28, 'F');
-
-    // School name
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(20);
-    doc.setFont('helvetica', 'bold');
-    doc.text('EduGate School System', 14, 13);
-
-    // Report title
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Student Directory Report', 14, 21);
-
-    // Date on right
-    const now = new Date();
-    const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    doc.setFontSize(9);
-    doc.text(`Generated: ${dateStr}`, 297 - 14, 21, { align: 'right' });
-
-    // Summary box
-    doc.setTextColor(50, 50, 50);
-    doc.setFillColor(245, 245, 255);
-    doc.roundedRect(14, 32, 60, 14, 3, 3, 'F');
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Total Students', 16, 38);
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(79, 70, 229);
-    doc.text(String(res.data.length), 16, 45);
-
-    // Count by gender
-    const males = res.data.filter(s => s.gender && s.gender.toLowerCase() === 'male').length;
-    const females = res.data.filter(s => s.gender && s.gender.toLowerCase() === 'female').length;
-
-    doc.setFillColor(245, 255, 250);
-    doc.roundedRect(80, 32, 60, 14, 3, 3, 'F');
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(50, 50, 50);
-    doc.text('Male Students', 82, 38);
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(16, 185, 129);
-    doc.text(String(males), 82, 45);
-
-    doc.setFillColor(255, 245, 255);
-    doc.roundedRect(146, 32, 60, 14, 3, 3, 'F');
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(50, 50, 50);
-    doc.text('Female Students', 148, 38);
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(236, 72, 153);
-    doc.text(String(females), 148, 45);
-
-    // Table
-    const tableData = res.data.map((s, i) => [
-        i + 1,
-        s.full_name || '-',
-        s.admission_number || '-',
-        s.class || '-',
-        s.gender || '-',
-        s.phone || '-',
-        s.email || '-',
-        s.date_of_birth || '-',
-        s.created_at ? s.created_at.split(' ')[0] : '-'
-    ]);
-
-    doc.autoTable({
-        startY: 52,
-        head: [['#', 'Full Name', 'Adm No.', 'Class', 'Gender', 'Phone', 'Email', 'Date of Birth', 'Registered']],
-        body: tableData,
-        styles: { fontSize: 8.5, cellPadding: 3, textColor: [40, 40, 40] },
-        headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold', fontSize: 9 },
-        alternateRowStyles: { fillColor: [248, 248, 255] },
-        columnStyles: {
-            0: { cellWidth: 10, halign: 'center' },
-            1: { cellWidth: 45 },
-            2: { cellWidth: 25 },
-            3: { cellWidth: 22 },
-            4: { cellWidth: 20 },
-            5: { cellWidth: 28 },
-            6: { cellWidth: 48 },
-            7: { cellWidth: 28 },
-            8: { cellWidth: 28 }
-        },
-        margin: { left: 14, right: 14 }
+// Helper function to generate QR Code as DataURL
+function generateQRCodeBase64(text) {
+    return new Promise((resolve) => {
+        const tempDiv = document.createElement('div');
+        new QRCode(tempDiv, {
+            text: text,
+            width: 128,
+            height: 128,
+            colorDark : "#000000",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.L
+        });
+        
+        // Wait a tiny bit for the canvas to render
+        setTimeout(() => {
+            const canvas = tempDiv.querySelector('canvas');
+            if (canvas) {
+                resolve(canvas.toDataURL("image/png"));
+            } else {
+                resolve(null);
+            }
+        }, 50);
     });
+}
 
-    // Footer
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFillColor(79, 70, 229);
-        doc.rect(0, doc.internal.pageSize.height - 10, 297, 10, 'F');
-        doc.setFontSize(8);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(255, 255, 255);
-        doc.text(`EduGate School System — Confidential`, 14, doc.internal.pageSize.height - 3);
-        doc.text(`Page ${i} of ${pageCount}`, 297 - 14, doc.internal.pageSize.height - 3, { align: 'right' });
+async function downloadStudentsPDF(filterType = 'all') {
+    const btnId = 'btn-pdf-' + filterType;
+    const btn = document.getElementById(btnId);
+    
+    if (btn) {
+        btn.innerHTML = '<i class="ph ph-spinner ph-spin" style="font-size: 1.5rem; margin-right: 0.5rem;"></i><div><strong style="display: block;">Generating...</strong></div>';
     }
 
-    doc.save(`Students_Directory_${now.toISOString().slice(0, 10)}.pdf`);
+    try {
+        // Fetch all students
+        const resStudents = await fetchData('api/students.php?action=list');
+        if (!resStudents || resStudents.status !== 'success' || resStudents.data.length === 0) {
+            showNotification('No students found in the database.', 'error');
+            closePdfModal();
+            return;
+        }
 
-    btn.innerHTML = '<i class="ph ph-file-pdf"></i> Download PDF';
-    btn.disabled = false;
-    showNotification(`PDF exported with ${res.data.length} students!`, 'success');
+        let finalData = resStudents.data;
+        let reportSubtitle = 'All Registered Students';
+
+        // Fetch attendance for filtering
+        if (filterType !== 'all') {
+            const today = new Date().toISOString().split('T')[0];
+            const resAttendance = await fetchData(`api/attendance.php?action=records&date=${today}`);
+            
+            const presentStudentIds = new Set();
+            if (resAttendance && resAttendance.status === 'success') {
+                resAttendance.data.forEach(record => {
+                    // Extract student ID from the record (wait, records returns full details, but doesn't explicitly return student_id, only 'id' which is attendance ID. Let's match by admission_number)
+                    presentStudentIds.add(record.admission_number);
+                });
+            }
+
+            if (filterType === 'present') {
+                finalData = resStudents.data.filter(s => presentStudentIds.has(s.admission_number));
+                reportSubtitle = `Present Students - ${today}`;
+            } else if (filterType === 'absent') {
+                finalData = resStudents.data.filter(s => !presentStudentIds.has(s.admission_number));
+                reportSubtitle = `Absent Students - ${today}`;
+            }
+        }
+
+        if (finalData.length === 0) {
+            showNotification(`No students match the filter "${filterType}".`, 'error');
+            closePdfModal();
+            return;
+        }
+
+        // Generate QR Code data URLs for all filtered students
+        for (let s of finalData) {
+            s.qrBase64 = await generateQRCodeBase64(s.qr_code);
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+        // Header background
+        doc.setFillColor(79, 70, 229);
+        doc.rect(0, 0, 297, 28, 'F');
+
+        // School name
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(20);
+        doc.setFont('helvetica', 'bold');
+        doc.text('EduGate School System', 14, 13);
+
+        // Report title
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Student Directory Report - ${reportSubtitle}`, 14, 21);
+
+        // Date on right
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        doc.setFontSize(9);
+        doc.text(`Generated: ${dateStr}`, 297 - 14, 21, { align: 'right' });
+
+        // Table Data
+        const tableData = finalData.map((s, i) => [
+            i + 1,
+            s.full_name || '-',
+            s.admission_number || '-',
+            s.class || '-',
+            s.gender || '-',
+            s.phone || '-',
+            s.email || '-',
+            '', // Placeholder for QR code image
+        ]);
+
+        doc.autoTable({
+            startY: 32,
+            head: [['#', 'Full Name', 'Adm No.', 'Class', 'Gender', 'Phone', 'Email', 'QR Code']],
+            body: tableData,
+            styles: { fontSize: 8.5, cellPadding: 4, textColor: [40, 40, 40], valign: 'middle' },
+            headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+            alternateRowStyles: { fillColor: [248, 248, 255] },
+            bodyStyles: { minCellHeight: 18 }, // Make row taller to fit QR code
+            columnStyles: {
+                0: { cellWidth: 10, halign: 'center' },
+                1: { cellWidth: 45 },
+                2: { cellWidth: 25 },
+                3: { cellWidth: 22 },
+                4: { cellWidth: 20 },
+                5: { cellWidth: 30 },
+                6: { cellWidth: 45 },
+                7: { cellWidth: 25, halign: 'center' }
+            },
+            margin: { left: 14, right: 14 },
+            didDrawCell: function (data) {
+                // Check if it's the QR Code column (index 7) in the body
+                if (data.column.index === 7 && data.section === 'body') {
+                    const student = finalData[data.row.index];
+                    if (student && student.qrBase64) {
+                        // Draw the image: doc.addImage(imageData, format, x, y, width, height)
+                        // Center it in the cell
+                        const dim = 16;
+                        const x = data.cell.x + (data.cell.width - dim) / 2;
+                        const y = data.cell.y + (data.cell.height - dim) / 2;
+                        doc.addImage(student.qrBase64, 'PNG', x, y, dim, dim);
+                    }
+                }
+            }
+        });
+
+        // Footer
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFillColor(79, 70, 229);
+            doc.rect(0, doc.internal.pageSize.height - 10, 297, 10, 'F');
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(255, 255, 255);
+            doc.text(`EduGate School System — Confidential`, 14, doc.internal.pageSize.height - 3);
+            doc.text(`Page ${i} of ${pageCount}`, 297 - 14, doc.internal.pageSize.height - 3, { align: 'right' });
+        }
+
+        doc.save(`Students_Directory_${filterType}_${now.toISOString().slice(0, 10)}.pdf`);
+        showNotification(`PDF exported with ${finalData.length} students!`, 'success');
+
+    } catch (e) {
+        console.error("PDF Error:", e);
+        showNotification("Failed to generate PDF.", 'error');
+    }
+
+    closePdfModal();
 }
