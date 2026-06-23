@@ -1,3 +1,48 @@
+function compressImage(file, maxWidth, maxHeight, quality) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = event => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height = Math.round(height * (maxWidth / width));
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width = Math.round(width * (maxHeight / height));
+                        height = maxHeight;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Fallback to jpeg if type is not supported
+                const mimeType = file.type || 'image/jpeg';
+                canvas.toBlob(blob => {
+                    if (blob) {
+                        resolve(blob);
+                    } else {
+                        reject(new Error('Canvas to Blob failed'));
+                    }
+                }, mimeType, quality);
+            };
+            img.onerror = error => reject(error);
+        };
+        reader.onerror = error => reject(error);
+    });
+}
+
 // Used for both add_student.html and students.html
 document.addEventListener('DOMContentLoaded', () => {
     
@@ -13,6 +58,19 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.disabled = true;
 
             const formData = new FormData(addForm);
+            
+            // Client-side image compression to bypass PHP size limits
+            const photoInput = document.getElementById('photo');
+            if (photoInput && photoInput.files[0]) {
+                const file = photoInput.files[0];
+                try {
+                    const compressedBlob = await compressImage(file, 800, 800, 0.8);
+                    // Override the photo field with the compressed blob
+                    formData.set('photo', compressedBlob, file.name);
+                } catch(e) {
+                    console.error("Image compression failed, falling back to original file.", e);
+                }
+            }
             
             try {
                 const response = await fetch(API_BASE_URL + 'api/students.php', {

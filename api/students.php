@@ -21,30 +21,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Handle Photo upload
     $photo_path = null;
-    if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
-        $upload_dir = '../uploads/photos/';
-        if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0777, true);
-        }
-        $file_ext = strtolower(pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION));
-        $allowed_exts = ['jpg', 'jpeg', 'png', 'gif'];
-        if (in_array($file_ext, $allowed_exts)) {
-            $filename = uniqid('stu_') . '.' . $file_ext;
-            if (move_uploaded_file($_FILES['photo']['tmp_name'], $upload_dir . $filename)) {
-                $photo_path = 'uploads/photos/' . $filename;
+    $upload_debug = "";
+    if (isset($_FILES['photo'])) {
+        if ($_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+            $upload_dir = '../uploads/photos/';
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
             }
+            $file_ext = strtolower(pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION));
+            $allowed_exts = ['jpg', 'jpeg', 'png', 'gif'];
+            if (in_array($file_ext, $allowed_exts)) {
+                $filename = uniqid('stu_') . '.' . $file_ext;
+                if (move_uploaded_file($_FILES['photo']['tmp_name'], $upload_dir . $filename)) {
+                    $photo_path = 'uploads/photos/' . $filename;
+                    $upload_debug = "Success";
+                } else {
+                    $upload_debug = "move_uploaded_file failed";
+                }
+            } else {
+                $upload_debug = "Invalid extension: " . $file_ext;
+            }
+        } else {
+            $upload_debug = "Upload error code: " . $_FILES['photo']['error'];
         }
+    } else {
+        $upload_debug = "No photo field in FILES array";
     }
 
     try {
         $stmt = $pdo->prepare("INSERT INTO students (full_name, admission_number, class, gender, photo, qr_code) VALUES (?, ?, ?, ?, ?, ?)");
         $stmt->execute([$full_name, $admission_number, $class, $gender, $photo_path, $qr_code]);
-        echo json_encode(["status" => "success", "message" => "Student registered successfully.", "qr_code" => $qr_code]);
+        echo json_encode(["status" => "success", "message" => "Student registered successfully.", "qr_code" => $qr_code, "upload_debug" => $upload_debug]);
     } catch (PDOException $e) {
         if ($e->getCode() == 23000) { // Integrity constraint violation (Duplicate)
-            echo json_encode(["status" => "error", "message" => "A student with this admission number already exists."]);
+            echo json_encode(["status" => "error", "message" => "A student with this admission number already exists.", "upload_debug" => $upload_debug]);
         } else {
-            echo json_encode(["status" => "error", "message" => "Database error: " . $e->getMessage()]);
+            echo json_encode(["status" => "error", "message" => "Database error: " . $e->getMessage(), "upload_debug" => $upload_debug]);
         }
     }
 } else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
