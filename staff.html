@@ -145,5 +145,53 @@
             </div>
         </div>
     </div>
+    <!-- Edit Staff Modal -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Edit Staff Member</h2>
+                <span class="close" onclick="closeEditModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="edit-staff-form">
+                    <input type="hidden" name="id" id="edit-id">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" name="name" id="edit-name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" name="username" id="edit-username" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>New Password (leave blank to keep current)</label>
+                        <input type="password" name="password" id="edit-password" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Account Role</label>
+                        <select name="role" class="form-control" id="edit-role-select">
+                            <option value="Staff">Staff</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="edit-permissions-container">
+                        <label>Allowed Features</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top:10px; background:var(--bg-color); padding:1rem; border-radius:var(--radius-md);">
+                            <label><input type="checkbox" class="edit-perm-check" value="index"> Dashboard</label>
+                            <label><input type="checkbox" class="edit-perm-check" value="scanner"> Scanner</label>
+                            <label><input type="checkbox" class="edit-perm-check" value="records"> Records</label>
+                            <label><input type="checkbox" class="edit-perm-check" value="students"> View Students</label>
+                            <label><input type="checkbox" class="edit-perm-check" value="add_student"> Add Student</label>
+                            <label><input type="checkbox" class="edit-perm-check" value="reports"> Reports</label>
+                            <label><input type="checkbox" class="edit-perm-check" value="settings"> Settings</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width:100%; margin-top:20px;">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

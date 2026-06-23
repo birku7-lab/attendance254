@@ -52,6 +52,38 @@ try {
         
         echo json_encode(['status' => 'success', 'message' => 'Staff added successfully']);
     }
+    elseif ($action === 'edit' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $id = $_POST['id'] ?? 0;
+        $name = $_POST['name'] ?? '';
+        $username = $_POST['username'] ?? '';
+        $password = $_POST['password'] ?? '';
+        $role = $_POST['role'] ?? 'Staff';
+        $permissions = $_POST['permissions'] ?? '[]'; // JSON array string
+
+        if (!$id || !$name || !$username) {
+            echo json_encode(['status' => 'error', 'message' => 'Name and Username are required']);
+            exit;
+        }
+
+        // Check if username exists for OTHER users
+        $check = $pdo->prepare("SELECT id FROM users WHERE username = ? AND id != ?");
+        $check->execute([$username, $id]);
+        if($check->fetch()) {
+            echo json_encode(['status' => 'error', 'message' => 'Username already exists']);
+            exit;
+        }
+
+        if (!empty($password)) {
+            $hash = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $pdo->prepare("UPDATE users SET name = ?, username = ?, password_hash = ?, role = ?, permissions = ? WHERE id = ?");
+            $stmt->execute([$name, $username, $hash, $role, $permissions, $id]);
+        } else {
+            $stmt = $pdo->prepare("UPDATE users SET name = ?, username = ?, role = ?, permissions = ? WHERE id = ?");
+            $stmt->execute([$name, $username, $role, $permissions, $id]);
+        }
+        
+        echo json_encode(['status' => 'success', 'message' => 'Staff updated successfully']);
+    }
     elseif ($action === 'delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $id = $_POST['id'] ?? 0;
         
