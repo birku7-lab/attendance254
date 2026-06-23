@@ -197,6 +197,7 @@ async function loadStudents() {
                 <td>${s.gender}</td>
                 <td>
                     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                        <button class="btn btn-success" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: var(--success); border:none;" onclick="markPresent('${s.qr_code}')">Present</button>
                         <button class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewProfile(${s.id})">Profile & QR</button>
                         <button class="btn btn-warning" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: var(--warning); border:none;" onclick="editStudent(${s.id})">Edit</button>
                         <button class="btn btn-danger" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: var(--danger); border:none;" onclick="deleteStudent(${s.id})">Delete</button>
@@ -590,5 +591,28 @@ async function deleteStudent(id) {
             console.error(error);
             showNotification('Failed to delete student.', 'error');
         }
+    }
+}
+
+async function markPresent(qrCode) {
+    try {
+        const formData = new FormData();
+        formData.append('qr_code', qrCode);
+        const response = await fetch(API_BASE_URL + 'api/attendance.php?action=scan', {
+            method: 'POST',
+            body: formData,
+            headers: { 'ngrok-skip-browser-warning': '69420' }
+        });
+        const result = await response.json();
+        if (result.status === 'success') {
+            showNotification("Student marked as present!", 'success');
+        } else if (result.status === 'duplicate') {
+            showNotification(result.message, 'warning'); // "Student already scanned today"
+        } else {
+            showNotification(result.message, 'error');
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('Failed to mark student as present.', 'error');
     }
 }
