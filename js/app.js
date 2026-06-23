@@ -194,6 +194,7 @@ async function fetchData(url, options = {}) {
         try {
             const urlObj = new URL(fullUrl);
             urlObj.searchParams.append('_t', Date.now());
+            if (token) urlObj.searchParams.append('token', token); // Pass token in query string to bypass Apache stripping headers
             finalUrl = urlObj.toString();
         } catch(e){}
 
