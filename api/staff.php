@@ -4,7 +4,7 @@ require_once 'config.php';
 
 // Simple check to ensure only Admin uses this. 
 // In a production environment, you would check the token in the headers here.
-$token = $_SERVER['HTTP_AUTHORIZATION'] ?? ($_POST['token'] ?? '');
+$token = $_SERVER['HTTP_AUTHORIZATION'] ?? ($_REQUEST['token'] ?? '');
 if(strpos($token, 'Bearer ') === 0) {
     $token = substr($token, 7);
 }

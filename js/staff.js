@@ -87,6 +87,7 @@ async function handleAddStaff(e) {
 
     const fd = new FormData(form);
     fd.append('permissions', JSON.stringify(permissions));
+    fd.append('token', localStorage.getItem('auth_token'));
 
     btn.disabled = true;
     btn.innerHTML = 'Creating...';
@@ -123,6 +124,7 @@ async function deleteStaff(id) {
         try {
             const fd = new FormData();
             fd.append('id', id);
+            fd.append('token', localStorage.getItem('auth_token'));
             
             const res = await fetch(API_BASE_URL + 'api/staff.php?action=delete', {
                 method: 'POST',

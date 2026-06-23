@@ -38,8 +38,11 @@ try {
             echo json_encode(['status' => 'error', 'message' => 'Invalid email or password']);
         }
     } 
-    elseif ($action === 'verify' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        $token = $_POST['token'] ?? '';
+    elseif ($action === 'verify') {
+        $token = $_SERVER['HTTP_AUTHORIZATION'] ?? ($_REQUEST['token'] ?? '');
+        if(strpos($token, 'Bearer ') === 0) {
+            $token = substr($token, 7);
+        }
         if (!$token) {
             echo json_encode(['status' => 'error', 'message' => 'No token provided']);
             exit;
