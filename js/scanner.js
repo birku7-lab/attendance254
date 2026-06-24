@@ -34,7 +34,6 @@ async function syncOfflineScans() {
         // Still offline or server down
     }
 }
-let isPausedByUser = false;
 
 function togglePauseResume() {
     const btn = document.getElementById('pause-resume-btn');
