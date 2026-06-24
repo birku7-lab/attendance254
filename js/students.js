@@ -223,14 +223,20 @@ async function loadStudents() {
         if (statFemalePct) statFemalePct.textContent = total > 0 ? `${((females/total)*100).toFixed(1)}% of total` : '-';
         if (statClasses) statClasses.textContent = classes;
 
-        // Populate class dropdown
+        // Populate class dropdown dynamically from student data
         const filterClass = document.getElementById('filter-class');
         if (filterClass) {
-            const uniqueClasses = [...new Set(res.data.map(s => s.class))].sort();
-            filterClass.innerHTML = '<option value="">&#127979; All Classes</option>';
+            const currentVal = filterClass.value; // preserve selection if re-loading
+            const uniqueClasses = [...new Set(res.data.map(s => s.class).filter(Boolean))].sort();
+            filterClass.innerHTML = '<option value="">All Classes</option>';
             uniqueClasses.forEach(c => {
-                filterClass.innerHTML += `<option value="${c}">${c}</option>`;
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                filterClass.appendChild(opt);
             });
+            // Restore previous selection
+            if (currentVal) filterClass.value = currentVal;
         }
 
         applyFilters();
@@ -241,9 +247,12 @@ async function loadStudents() {
 }
 
 function applyFilters() {
-    const searchTerm = (document.getElementById('search-student')?.value || '').toLowerCase();
-    const filterClass = (document.getElementById('filter-class')?.value || '');
-    const filterGender = (document.getElementById('filter-gender')?.value || '');
+    const searchTerm = (document.getElementById('search-student')?.value || '').toLowerCase().trim();
+    const filterClass = (document.getElementById('filter-class')?.value || '').trim();
+    const filterGender = (document.getElementById('filter-gender')?.value || '').trim();
+    // Status filter: 'Active' is the only real option; empty means show all
+    // All students are treated as Active for now
+    const filterStatus = (document.getElementById('filter-status')?.value || '').trim();
 
     window._filteredStudents = window._allStudents.filter(s => {
         const matchSearch = !searchTerm ||
@@ -251,11 +260,25 @@ function applyFilters() {
             s.admission_number.toLowerCase().includes(searchTerm);
         const matchClass = !filterClass || s.class === filterClass;
         const matchGender = !filterGender || s.gender === filterGender;
-        return matchSearch && matchClass && matchGender;
+        // All students are Active; if filter is empty or 'Active', match all
+        const matchStatus = !filterStatus || filterStatus === 'Active';
+        return matchSearch && matchClass && matchGender && matchStatus;
     });
 
     window._studentsPage = 1;
     renderPage();
+}
+
+function clearFilters() {
+    const search = document.getElementById('search-student');
+    const fc = document.getElementById('filter-class');
+    const fg = document.getElementById('filter-gender');
+    const fs = document.getElementById('filter-status');
+    if (search) search.value = '';
+    if (fc) fc.value = '';
+    if (fg) fg.value = '';
+    if (fs) fs.value = '';
+    applyFilters();
 }
 
 function renderPage() {
