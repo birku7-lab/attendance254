@@ -2,6 +2,40 @@ let html5QrCode;
 let isProcessing = false;
 let isPausedByUser = false;
 
+// Offline Sync Loop
+setInterval(syncOfflineScans, 3000);
+
+async function syncOfflineScans() {
+    if (!navigator.onLine) return;
+    const scans = JSON.parse(localStorage.getItem('offline_scans') || '[]');
+    if (scans.length === 0) return;
+
+    // We have scans to sync
+    const scan = scans[0];
+    const formData = new FormData();
+    formData.append('qr_code', scan.qr_code);
+    formData.append('timestamp', scan.timestamp);
+
+    try {
+        const res = await fetchData('api/attendance.php?action=scan', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (res && res.status !== 'error' || (res && res.status === 'error' && !res.message.includes('Failed to fetch'))) {
+            // Successfully reached server (even if it's an API error like Invalid QR, we remove it from queue)
+            scans.shift();
+            localStorage.setItem('offline_scans', JSON.stringify(scans));
+            
+            // Trigger UI update if it was the last one
+            if(scans.length === 0) showNotification('Offline scans synchronized!', 'success');
+        }
+    } catch(e) {
+        // Still offline or server down
+    }
+}
+let isPausedByUser = false;
+
 function togglePauseResume() {
     const btn = document.getElementById('pause-resume-btn');
     if (!html5QrCode) return;
@@ -89,13 +123,31 @@ async function processScan(qrCode) {
     document.getElementById('scan-status').textContent = 'Processing...';
     document.getElementById('scan-status').style.color = 'var(--warning)';
     
+    // --- OFFLINE QUEUE CHECK ---
+    if (!navigator.onLine) {
+        saveScanOffline(qrCode);
+        return;
+    }
+
     const formData = new FormData();
     formData.append('qr_code', qrCode);
 
-    const res = await fetchData('api/attendance.php?action=scan', {
-        method: 'POST',
-        body: formData
-    });
+    let res;
+    try {
+        res = await fetchData('api/attendance.php?action=scan', {
+            method: 'POST',
+            body: formData
+        });
+        
+        // If fetch completely fails, fallback to offline
+        if (res && res.status === 'error' && res.message && (res.message.includes('Failed to fetch') || res.message.includes('NetworkError'))) {
+            saveScanOffline(qrCode);
+            return;
+        }
+    } catch(e) {
+        saveScanOffline(qrCode);
+        return;
+    }
 
     document.getElementById('idle-card').style.display = 'none';
     const resultCard = document.getElementById('result-card');
@@ -149,18 +201,57 @@ async function processScan(qrCode) {
 
     setTimeout(() => {
         isProcessing = false;
-        document.getElementById('scan-status').textContent = 'Ready to Scan...';
-        document.getElementById('scan-status').style.color = 'var(--primary)';
+        document.getElementById('scan-status').textContent = 'Ready to Scan';
+        document.getElementById('scan-status').style.color = 'var(--text-muted)';
         
-        // Re-enable webcam if used
-        // Re-enable webcam if used and not paused by user
         if(html5QrCode && html5QrCode.getState() === 3 /* PAUSED */ && !isPausedByUser) {
             html5QrCode.resume();
         }
         
         const usbInput = document.getElementById('usb-scanner-input');
         if(usbInput) usbInput.focus();
-    }, 2500); // Wait 2.5 seconds before allowing next scan
+    }, 2000);
+}
+
+function saveScanOffline(qrCode) {
+    const scans = JSON.parse(localStorage.getItem('offline_scans') || '[]');
+    // Use local ISO string to approximate YYYY-MM-DD HH:MM:SS format
+    const now = new Date();
+    const tzoffset = (new Date()).getTimezoneOffset() * 60000; 
+    const localISOTime = (new Date(Date.now() - tzoffset)).toISOString().slice(0, 19).replace('T', ' ');
+    
+    scans.push({ qr_code: qrCode, timestamp: localISOTime });
+    localStorage.setItem('offline_scans', JSON.stringify(scans));
+
+    document.getElementById('idle-card').style.display = 'none';
+    const resultCard = document.getElementById('result-card');
+    resultCard.className = 'scan-result-card success';
+    
+    document.getElementById('result-icon').textContent = '💾';
+    document.getElementById('result-message').textContent = 'Saved Offline (Pending Sync)';
+    document.getElementById('result-message').style.color = '#3b82f6';
+    document.getElementById('result-name').textContent = 'Unknown (Offline)';
+    document.getElementById('result-adm').textContent = qrCode;
+    document.getElementById('result-class').textContent = 'Pending';
+    document.getElementById('result-gender').textContent = 'Pending';
+    document.getElementById('result-time').textContent = localISOTime;
+    
+    document.getElementById('result-photo').src = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22120%22%20height%3D%22120%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23ccc%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M20%2021v-2a4%204%200%200%200-4-4H8a4%204%200%200%200-4%204v2%22%3E%3C%2Fpath%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%227%22%20r%3D%224%22%3E%3C%2Fcircle%3E%3C%2Fsvg%3E';
+    
+    playAudio('beep-success');
+
+    setTimeout(() => {
+        isProcessing = false;
+        document.getElementById('scan-status').textContent = 'Ready to Scan';
+        document.getElementById('scan-status').style.color = 'var(--text-muted)';
+        
+        if(html5QrCode && html5QrCode.getState() === 3 /* PAUSED */ && !isPausedByUser) {
+            html5QrCode.resume();
+        }
+        
+        const usbInput = document.getElementById('usb-scanner-input');
+        if(usbInput) usbInput.focus();
+    }, 2000);
 }
 
 function playAudio(type) {

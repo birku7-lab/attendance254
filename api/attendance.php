@@ -9,6 +9,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $qr_code = $_POST['qr_code'] ?? '';
         $date = date('Y-m-d');
         $time = date('H:i:s');
+
+        // Offline Sync Override
+        if (isset($_POST['timestamp']) && !empty($_POST['timestamp'])) {
+            $offline_time = strtotime($_POST['timestamp']);
+            if ($offline_time) {
+                $date = date('Y-m-d', $offline_time);
+                $time = date('H:i:s', $offline_time);
+            }
+        }
         
         if(empty($qr_code)) {
             echo json_encode(["status" => "error", "message" => "No QR code provided."]);

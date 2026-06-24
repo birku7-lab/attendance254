@@ -11,6 +11,34 @@
     if (token && !isLoginPage) {
         // Enforce Permissions on Sidebar
         window.addEventListener('DOMContentLoaded', () => {
+            
+            // PWA & Offline Setup
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error', err));
+            }
+
+            const networkInd = document.createElement('div');
+            networkInd.style.cssText = 'position:fixed;bottom:20px;left:20px;padding:8px 15px;border-radius:20px;font-weight:bold;font-size:12px;z-index:9999;display:none;';
+            document.body.appendChild(networkInd);
+
+            const updateOnlineStatus = () => {
+                if (navigator.onLine) {
+                    networkInd.style.display = 'block';
+                    networkInd.style.backgroundColor = '#10b981';
+                    networkInd.style.color = '#fff';
+                    networkInd.innerHTML = '🟢 Online';
+                    setTimeout(() => { networkInd.style.display = 'none'; }, 3000);
+                } else {
+                    networkInd.style.display = 'block';
+                    networkInd.style.backgroundColor = '#ef4444';
+                    networkInd.style.color = '#fff';
+                    networkInd.innerHTML = '🔴 Offline (Working Locally)';
+                }
+            };
+            window.addEventListener('online', updateOnlineStatus);
+            window.addEventListener('offline', updateOnlineStatus);
+            if (!navigator.onLine) updateOnlineStatus();
+
             const permsRaw = localStorage.getItem('user_permissions') || '[]';
             let permissions = [];
             try { permissions = JSON.parse(permsRaw); } catch(e){}
