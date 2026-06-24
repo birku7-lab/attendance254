@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Set current date & time
+    // Live clock
     const dateElement = document.getElementById('current-date-widget');
     const timeElement = document.getElementById('current-time-widget');
-    
+
     function updateDateTime() {
         const now = new Date();
         if (dateElement) {
@@ -12,110 +12,169 @@ document.addEventListener('DOMContentLoaded', () => {
             timeElement.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         }
     }
-    
     updateDateTime();
-    setInterval(updateDateTime, 60000);
+    setInterval(updateDateTime, 1000); // update every second
 
+    // Initial load
     loadDashboardStats();
-    
-    // Refresh stats every 30 seconds
-    setInterval(loadDashboardStats, 30000);
+
+    // Auto-refresh every 10 seconds so dashboard stays live after scans
+    setInterval(loadDashboardStats, 10000);
 });
 
 let lineChartInstance = null;
 let donutChartInstance = null;
+let _lastPresentCount = null; // track changes to animate
+
+function animateValue(elementId, newVal) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+
+    const oldVal = el.textContent;
+    if (oldVal !== String(newVal)) {
+        el.style.transition = 'all 0.3s ease';
+        el.style.transform = 'scale(1.15)';
+        el.style.color = '#4f46e5';
+        el.textContent = newVal;
+        setTimeout(() => {
+            el.style.transform = 'scale(1)';
+            el.style.color = '';
+        }, 400);
+    }
+}
 
 async function loadDashboardStats() {
     if (window.appSettings) {
-        if(window.appSettings.dash_cards === 'false') document.querySelector('.dashboard-grid').style.display = 'none';
-        if(window.appSettings.dash_live_scan === 'false') document.getElementById('live-scans-container').closest('.card').style.display = 'none';
-        if(window.appSettings.dash_charts === 'false') document.getElementById('attendanceLineChart').closest('.card').style.display = 'none';
-        if(window.appSettings.dash_quick_actions === 'false') document.querySelector('.quick-actions-grid').closest('.card').style.display = 'none';
+        if (window.appSettings.dash_cards === 'false') {
+            const grid = document.querySelector('.dashboard-grid');
+            if (grid) grid.style.display = 'none';
+        }
+        const scansContainer = document.getElementById('live-scans-container');
+        if (window.appSettings.dash_live_scan === 'false' && scansContainer) {
+            scansContainer.closest('.card').style.display = 'none';
+        }
+        const lineChart = document.getElementById('attendanceLineChart');
+        if (window.appSettings.dash_charts === 'false' && lineChart) {
+            lineChart.closest('.card').style.display = 'none';
+        }
+        const quickActions = document.querySelector('.quick-actions-grid');
+        if (window.appSettings.dash_quick_actions === 'false' && quickActions) {
+            quickActions.closest('.card').style.display = 'none';
+        }
     }
 
     const res = await fetchData('api/dashboard.php');
     if (res && res.status === 'success') {
         const data = res.data;
-        
-        // Update top cards
-        document.getElementById('stat-total').textContent = data.total_students;
-        document.getElementById('stat-present').textContent = data.present_today;
-        
-        let presentPerc = data.total_students > 0 ? ((data.present_today / data.total_students) * 100).toFixed(2) : 0;
-        document.getElementById('stat-present-subtitle').textContent = presentPerc + '% of total students';
-        
-        document.getElementById('stat-absent').textContent = data.absent_today;
-        let absentPerc = data.total_students > 0 ? ((data.absent_today / data.total_students) * 100).toFixed(2) : 0;
-        document.getElementById('stat-absent-subtitle').textContent = absentPerc + '% of total students';
-        
-        document.getElementById('stat-percentage').textContent = data.attendance_percentage + '%';
 
-        // Update Live Scans
+        // Animate stat cards on change
+        animateValue('stat-total', data.total_students);
+        animateValue('stat-present', data.present_today);
+        animateValue('stat-absent', data.absent_today);
+        animateValue('stat-percentage', data.attendance_percentage + '%');
+
+        const presentPerc = data.total_students > 0
+            ? ((data.present_today / data.total_students) * 100).toFixed(1)
+            : 0;
+        const absentPerc = data.total_students > 0
+            ? ((data.absent_today / data.total_students) * 100).toFixed(1)
+            : 0;
+
+        const presentSub = document.getElementById('stat-present-subtitle');
+        const absentSub = document.getElementById('stat-absent-subtitle');
+        if (presentSub) presentSub.textContent = presentPerc + '% of total students';
+        if (absentSub) absentSub.textContent = absentPerc + '% of total students';
+
+        // Update "Live Scans" panel
         const scansContainer = document.getElementById('live-scans-container');
-        scansContainer.innerHTML = '';
+        if (scansContainer) {
+            // Only re-render if count changed to avoid flicker
+            if (_lastPresentCount !== data.present_today) {
+                _lastPresentCount = data.present_today;
+                scansContainer.innerHTML = '';
 
-        if (data.recent_scans && data.recent_scans.length > 0) {
-            // Update summary
-            document.getElementById('summary-total-scans').textContent = data.present_today;
-            document.getElementById('summary-last-scan').textContent = data.recent_scans[0].arrival_time;
+                if (data.recent_scans && data.recent_scans.length > 0) {
+                    document.getElementById('summary-total-scans').textContent = data.present_today;
+                    document.getElementById('summary-last-scan').textContent = formatTime12h(data.recent_scans[0].arrival_time);
 
-            // Render up to 5 scans
-            data.recent_scans.slice(0, 5).forEach(scan => {
-                const photoSrc = scan.photo ? (API_BASE_URL + scan.photo) : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(scan.full_name) + '&background=random';
-                
-                // Format time
-                const [h, m] = scan.arrival_time.split(':');
-                let hour = parseInt(h);
-                const ampm = hour >= 12 ? 'PM' : 'AM';
-                hour = hour % 12;
-                hour = hour ? hour : 12; 
-                const timeStr = `${hour.toString().padStart(2, '0')}:${m} ${ampm}`;
+                    data.recent_scans.slice(0, 5).forEach(scan => {
+                        const photoSrc = scan.photo
+                            ? (API_BASE_URL + scan.photo)
+                            : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(scan.full_name) + '&background=e0e7ff&color=4f46e5';
 
-                const div = document.createElement('div');
-                div.className = 'scan-item';
-                div.innerHTML = `
-                    <div class="scan-user">
-                        <img src="${photoSrc}" alt="${scan.full_name}">
-                        <div class="scan-user-info">
-                            <h4>${scan.full_name}</h4>
-                            <p>${scan.admission_number || 'ID-XXX'}</p>
-                        </div>
-                    </div>
-                    <div class="scan-class">${scan.class}</div>
-                    <div class="scan-time">
-                        ${timeStr}
-                        <i class="ph-fill ph-check-circle"></i>
-                    </div>
-                `;
-                scansContainer.appendChild(div);
-            });
-        } else {
-            scansContainer.innerHTML = '<div style="text-align:center; padding: 2rem; color: var(--text-muted);">No scans yet today.</div>';
-            document.getElementById('summary-total-scans').textContent = '0';
-            document.getElementById('summary-last-scan').textContent = '-';
+                        const statusColor = scan.attendance_status === 'Present' ? '#10b981' : '#f59e0b';
+                        const statusIcon = scan.attendance_status === 'Present'
+                            ? '<i class="ph-fill ph-check-circle" style="color:#10b981;"></i>'
+                            : '<i class="ph-fill ph-clock" style="color:#f59e0b;"></i>';
+
+                        const div = document.createElement('div');
+                        div.className = 'scan-item';
+                        div.style.animation = 'slideInScan 0.3s ease';
+                        div.innerHTML = `
+                            <div class="scan-user">
+                                <img src="${photoSrc}" alt="${scan.full_name}"
+                                    onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(scan.full_name)}&background=e0e7ff&color=4f46e5'">
+                                <div class="scan-user-info">
+                                    <h4>${scan.full_name}</h4>
+                                    <p>${scan.admission_number || '-'}</p>
+                                </div>
+                            </div>
+                            <div class="scan-class">${scan.class}</div>
+                            <div class="scan-time">
+                                ${formatTime12h(scan.arrival_time)}
+                                ${statusIcon}
+                            </div>
+                        `;
+                        scansContainer.appendChild(div);
+                    });
+                } else {
+                    scansContainer.innerHTML = '<div style="text-align:center; padding: 2rem; color: var(--text-muted);">No scans yet today.</div>';
+                    const totalScans = document.getElementById('summary-total-scans');
+                    const lastScan = document.getElementById('summary-last-scan');
+                    if (totalScans) totalScans.textContent = '0';
+                    if (lastScan) lastScan.textContent = '-';
+                }
+            }
         }
 
-        // Initialize Charts with accurate data
-        initLineChart(data.weekly_data);
-        initDonutChart(data.total_students);
+        // Update notification badge with today's scan count
+        const badge = document.querySelector('.notification-btn .badge');
+        if (badge) badge.textContent = data.present_today;
+
+        // Update charts
+        updateLineChart(data.weekly_data);
+        updateDonutChart(data.class_distribution, data.total_students);
     }
 }
 
-function initLineChart(weeklyData) {
+function formatTime12h(timeStr) {
+    if (!timeStr) return '-';
+    const parts = timeStr.split(':');
+    if (parts.length < 2) return timeStr;
+    let hour = parseInt(parts[0]);
+    const min = parts[1];
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12;
+    hour = hour ? hour : 12;
+    return `${hour.toString().padStart(2, '0')}:${min} ${ampm}`;
+}
+
+function updateLineChart(weeklyData) {
     const ctx = document.getElementById('attendanceLineChart');
     if (!ctx) return;
 
+    const actualData = weeklyData || [0, 0, 0, 0, 0, 0];
+
     if (lineChartInstance) {
-        lineChartInstance.destroy();
+        // Just update data in place (smooth transition, no flicker)
+        lineChartInstance.data.datasets[0].data = actualData;
+        lineChartInstance.update('active');
+        return;
     }
 
-    // Creating a gradient for the line chart fill
     const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);
     gradient.addColorStop(0, 'rgba(79, 70, 229, 0.4)');
     gradient.addColorStop(1, 'rgba(79, 70, 229, 0.0)');
-
-    // Use accurate weekly data (Monday to Saturday)
-    const actualData = weeklyData || [0, 0, 0, 0, 0, 0];
 
     lineChartInstance = new Chart(ctx, {
         type: 'line',
@@ -133,12 +192,13 @@ function initLineChart(weeklyData) {
                 pointRadius: 4,
                 pointHoverRadius: 6,
                 fill: true,
-                tension: 0.4 // Smooth curve
+                tension: 0.4
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: { duration: 600 },
             plugins: {
                 legend: { display: false },
                 tooltip: {
@@ -147,7 +207,7 @@ function initLineChart(weeklyData) {
                     cornerRadius: 8,
                     displayColors: false,
                     callbacks: {
-                        label: function(context) { return context.parsed.y + '%'; }
+                        label: function (context) { return context.parsed.y + '%'; }
                     }
                 }
             },
@@ -167,79 +227,86 @@ function initLineChart(weeklyData) {
     });
 }
 
-function initDonutChart(totalStudents) {
+function updateDonutChart(classDistribution, totalStudents) {
     const ctx = document.getElementById('classDonutChart');
     if (!ctx) return;
 
+    const donutTotal = document.getElementById('donut-total');
+    if (donutTotal) donutTotal.textContent = totalStudents;
+
+    if (!classDistribution || classDistribution.length === 0) return;
+
+    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#ec4899', '#14b8a6', '#f97316'];
+    const labels = classDistribution.map(c => c.class);
+    const data = classDistribution.map(c => c.count);
+    const bgColors = classDistribution.map((_, i) => colors[i % colors.length]);
+
     if (donutChartInstance) {
-        donutChartInstance.destroy();
-    }
-
-    document.getElementById('donut-total').textContent = totalStudents;
-
-    // Mock class distribution
-    const labels = ['Grade 8 Blue', 'Grade 7A', 'Grade 7B', 'Grade 6A', 'Others'];
-    // Adjust mock data to sum up approximately to totalStudents
-    const p1 = Math.round(totalStudents * 0.249);
-    const p2 = Math.round(totalStudents * 0.235);
-    const p3 = Math.round(totalStudents * 0.208);
-    const p4 = Math.round(totalStudents * 0.163);
-    const p5 = totalStudents - (p1 + p2 + p3 + p4);
-    
-    const data = [p1, p2, p3, p4, p5];
-    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#94a3b8'];
-
-    donutChartInstance = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: labels,
-            datasets: [{
-                data: data,
-                backgroundColor: colors,
-                borderWidth: 0,
-                hoverOffset: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '75%',
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#1e293b',
-                    padding: 10,
-                    cornerRadius: 8,
-                    callbacks: {
-                        label: function(context) { return ` ${context.label}: ${context.raw} students`; }
+        // Update in place
+        donutChartInstance.data.labels = labels;
+        donutChartInstance.data.datasets[0].data = data;
+        donutChartInstance.data.datasets[0].backgroundColor = bgColors;
+        donutChartInstance.update('active');
+    } else {
+        donutChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: bgColors,
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                animation: { duration: 600 },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        padding: 10,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function (context) { return ` ${context.label}: ${context.raw} students`; }
+                        }
                     }
                 }
             }
-        }
-    });
+        });
+    }
 
-    // Build custom legend
+    // Build real legend
     const legendContainer = document.getElementById('donut-legend');
-    legendContainer.innerHTML = '';
-    
-    labels.forEach((label, i) => {
-        const val = data[i];
-        const perc = totalStudents > 0 ? ((val / totalStudents) * 100).toFixed(1) : 0;
-        
-        const div = document.createElement('div');
-        div.style.display = 'flex';
-        div.style.alignItems = 'center';
-        div.style.justifyContent = 'space-between';
-        
-        div.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${colors[i]};"></span>
-                <span style="color: var(--text-main); font-weight: 500;">${label}</span>
-            </div>
-            <div style="color: var(--text-muted);">
-                <span>${val}</span> <span style="font-size: 0.7rem; margin-left: 5px;">(${perc}%)</span>
-            </div>
-        `;
-        legendContainer.appendChild(div);
-    });
+    if (legendContainer) {
+        legendContainer.innerHTML = '';
+        classDistribution.forEach((item, i) => {
+            const perc = totalStudents > 0 ? ((item.count / totalStudents) * 100).toFixed(1) : 0;
+            const div = document.createElement('div');
+            div.style.cssText = 'display: flex; align-items: center; justify-content: space-between;';
+            div.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${bgColors[i]};"></span>
+                    <span style="color: var(--text-main); font-weight: 500;">${item.class}</span>
+                </div>
+                <div style="color: var(--text-muted);">
+                    <span>${item.count}</span> <span style="font-size: 0.7rem; margin-left: 5px;">(${perc}%)</span>
+                </div>
+            `;
+            legendContainer.appendChild(div);
+        });
+    }
 }
+
+// Add slide-in animation for scan items
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInScan {
+        from { opacity: 0; transform: translateY(-8px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+`;
+document.head.appendChild(style);
