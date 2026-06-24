@@ -153,60 +153,296 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Load Students List
-    const studentsTableBody = document.querySelector('#students-table tbody');
+    // Load Students List (students.html)
+    const studentsTableBody = document.getElementById('students-tbody');
     if (studentsTableBody) {
         loadStudents();
-        
+
         // Search functionality
         const searchInput = document.getElementById('search-student');
         if (searchInput) {
-            searchInput.addEventListener('keyup', (e) => {
-                const term = e.target.value.toLowerCase();
-                const rows = studentsTableBody.querySelectorAll('tr');
-                rows.forEach(row => {
-                    const text = row.textContent.toLowerCase();
-                    row.style.display = text.includes(term) ? '' : 'none';
-                });
+            searchInput.addEventListener('input', () => applyFilters());
+        }
+
+        // Dropdown filters
+        const filterClass = document.getElementById('filter-class');
+        const filterGender = document.getElementById('filter-gender');
+        const filterStatus = document.getElementById('filter-status');
+        if (filterClass) filterClass.addEventListener('change', () => applyFilters());
+        if (filterGender) filterGender.addEventListener('change', () => applyFilters());
+        if (filterStatus) filterStatus.addEventListener('change', () => applyFilters());
+
+        // Items per page
+        const itemsPerPage = document.getElementById('items-per-page');
+        if (itemsPerPage) {
+            itemsPerPage.addEventListener('change', () => {
+                window._studentsPage = 1;
+                renderPage();
             });
         }
     }
 });
 
+// Global storage for all student data and filtered data
+window._allStudents = [];
+window._filteredStudents = [];
+window._studentsPage = 1;
+
 async function loadStudents() {
-    const tbody = document.querySelector('#students-table tbody');
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">Loading...</td></tr>';
-    
+    const tbody = document.getElementById('students-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 2rem; color: #94a3b8;"><i class="ph ph-spinner" style="font-size:1.5rem;"></i><br>Loading students...</td></tr>`;
+
     const res = await fetchData('api/students.php?action=list');
-    
+
     if (res && res.status === 'success') {
-        tbody.innerHTML = '';
+        window._allStudents = res.data;
+
         if (res.data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">No students found.</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:2rem; color:#94a3b8;">No students found.</td></tr>`;
             return;
         }
-        
-        res.data.forEach(s => {
+
+        // Compute stats
+        const total = res.data.length;
+        const males = res.data.filter(s => s.gender === 'Male').length;
+        const females = res.data.filter(s => s.gender === 'Female').length;
+        const classes = new Set(res.data.map(s => s.class)).size;
+
+        const statTotal = document.getElementById('stat-total');
+        const statMale = document.getElementById('stat-male');
+        const statMalePct = document.getElementById('stat-male-pct');
+        const statFemale = document.getElementById('stat-female');
+        const statFemalePct = document.getElementById('stat-female-pct');
+        const statClasses = document.getElementById('stat-classes');
+
+        if (statTotal) statTotal.textContent = total.toLocaleString();
+        if (statMale) statMale.textContent = males.toLocaleString();
+        if (statMalePct) statMalePct.textContent = total > 0 ? `${((males/total)*100).toFixed(1)}% of total` : '-';
+        if (statFemale) statFemale.textContent = females.toLocaleString();
+        if (statFemalePct) statFemalePct.textContent = total > 0 ? `${((females/total)*100).toFixed(1)}% of total` : '-';
+        if (statClasses) statClasses.textContent = classes;
+
+        // Populate class dropdown
+        const filterClass = document.getElementById('filter-class');
+        if (filterClass) {
+            const uniqueClasses = [...new Set(res.data.map(s => s.class))].sort();
+            filterClass.innerHTML = '<option value="">&#127979; All Classes</option>';
+            uniqueClasses.forEach(c => {
+                filterClass.innerHTML += `<option value="${c}">${c}</option>`;
+            });
+        }
+
+        applyFilters();
+    } else {
+        const tbody = document.getElementById('students-tbody');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:2rem; color:#ef4444;">Failed to load students.</td></tr>`;
+    }
+}
+
+function applyFilters() {
+    const searchTerm = (document.getElementById('search-student')?.value || '').toLowerCase();
+    const filterClass = (document.getElementById('filter-class')?.value || '');
+    const filterGender = (document.getElementById('filter-gender')?.value || '');
+
+    window._filteredStudents = window._allStudents.filter(s => {
+        const matchSearch = !searchTerm ||
+            s.full_name.toLowerCase().includes(searchTerm) ||
+            s.admission_number.toLowerCase().includes(searchTerm);
+        const matchClass = !filterClass || s.class === filterClass;
+        const matchGender = !filterGender || s.gender === filterGender;
+        return matchSearch && matchClass && matchGender;
+    });
+
+    window._studentsPage = 1;
+    renderPage();
+}
+
+function renderPage() {
+    const tbody = document.getElementById('students-tbody');
+    if (!tbody) return;
+
+    const perPage = parseInt(document.getElementById('items-per-page')?.value || '10');
+    const page = window._studentsPage;
+    const data = window._filteredStudents;
+    const total = data.length;
+    const totalPages = Math.ceil(total / perPage);
+    const start = (page - 1) * perPage;
+    const pageData = data.slice(start, start + perPage);
+
+    tbody.innerHTML = '';
+
+    if (pageData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:2rem; color:#94a3b8;">No students match your filters.</td></tr>`;
+    } else {
+        pageData.forEach(s => {
+            const photoSrc = s.photo
+                ? (API_BASE_URL + s.photo)
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(s.full_name)}&background=e0e7ff&color=4f46e5&size=40`;
+
+            // Generate a placeholder email from the name
+            const email = s.full_name.toLowerCase().replace(/\s+/g, '.') + '@email.com';
+
+            // Format created_at date
+            let dateAdded = '-';
+            if (s.created_at) {
+                const d = new Date(s.created_at);
+                dateAdded = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+            }
+
+            const genderIcon = s.gender === 'Male'
+                ? `<i class="ph ph-gender-male" style="color: #3b82f6;"></i>`
+                : `<i class="ph ph-gender-female" style="color: #ec4899;"></i>`;
+            const genderColor = s.gender === 'Male' ? '#eff6ff' : '#fdf4ff';
+            const genderTextColor = s.gender === 'Male' ? '#1d4ed8' : '#9333ea';
+
             const tr = document.createElement('tr');
-            const photoSrc = s.photo ? (API_BASE_URL + s.photo) : 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23ccc%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M20%2021v-2a4%204%200%200%200-4-4H8a4%204%200%200%200-4%204v2%22%3E%3C%2Fpath%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%227%22%20r%3D%224%22%3E%3C%2Fcircle%3E%3C%2Fsvg%3E';
+            tr.style.cssText = 'background: white; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);';
             tr.innerHTML = `
-                <td><img src="${photoSrc}" alt="${s.full_name}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;background:#f0f0f0;"></td>
-                <td><strong>${s.full_name}</strong></td>
-                <td>${s.admission_number}</td>
-                <td>${s.class}</td>
-                <td>${s.gender}</td>
-                <td>
-                    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                        <button class="btn btn-success" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: var(--success); border:none;" onclick="markPresent('${s.qr_code}')">Present</button>
-                        <button class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewProfile(${s.id})">Profile & QR</button>
-                        <button class="btn btn-warning" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: var(--warning); border:none;" onclick="editStudent(${s.id})">Edit</button>
-                        <button class="btn btn-danger" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: var(--danger); border:none;" onclick="deleteStudent(${s.id})">Delete</button>
+                <td style="padding: 1rem 1rem; border: none; border-radius: 10px 0 0 10px;">
+                    <img src="${photoSrc}" alt="${s.full_name}"
+                        style="width:42px; height:42px; border-radius:50%; object-fit:cover; background:#e0e7ff; border: 2px solid #e2e8f0;"
+                        onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(s.full_name)}&background=e0e7ff&color=4f46e5&size=40'">
+                </td>
+                <td style="padding: 1rem 0.5rem; border: none;">
+                    <div style="font-weight: 700; color: #1e293b; font-size: 0.95rem;">${s.full_name}</div>
+                    <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 2px;">${email}</div>
+                </td>
+                <td style="padding: 1rem 0.5rem; border: none; color: #3b82f6; font-weight: 600; font-size: 0.9rem;">${s.admission_number}</td>
+                <td style="padding: 1rem 0.5rem; border: none; color: #475569; font-weight: 500; font-size: 0.9rem;">${s.class}</td>
+                <td style="padding: 1rem 0.5rem; border: none;">
+                    <span style="display: inline-flex; align-items: center; gap: 0.3rem; background: ${genderColor}; color: ${genderTextColor}; padding: 0.3rem 0.7rem; border-radius: 20px; font-size: 0.82rem; font-weight: 600;">
+                        ${genderIcon} ${s.gender}
+                    </span>
+                </td>
+                <td style="padding: 1rem 0.5rem; border: none;">
+                    <span style="display: inline-flex; align-items: center; gap: 0.3rem; background: #ecfdf5; color: #059669; padding: 0.3rem 0.7rem; border-radius: 20px; font-size: 0.82rem; font-weight: 600;">
+                        <span style="width:6px; height:6px; border-radius:50%; background: #10b981; display:inline-block;"></span> Active
+                    </span>
+                </td>
+                <td style="padding: 1rem 0.5rem; border: none; color: #64748b; font-size: 0.88rem;">${dateAdded}</td>
+                <td style="padding: 1rem 1rem; border: none; border-radius: 0 10px 10px 0;">
+                    <div style="display: flex; align-items: center; gap: 0.4rem; justify-content: center;">
+                        <button title="View Profile" onclick="viewProfile(${s.id})"
+                            style="width:32px; height:32px; border-radius:7px; border:none; background:#eff6ff; color:#3b82f6; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem;">
+                            <i class="ph ph-eye"></i>
+                        </button>
+                        <button title="Edit Student" onclick="editStudent(${s.id})"
+                            style="width:32px; height:32px; border-radius:7px; border:none; background:#fff7ed; color:#f97316; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem;">
+                            <i class="ph ph-pencil"></i>
+                        </button>
+                        <button title="Delete Student" onclick="deleteStudent(${s.id})"
+                            style="width:32px; height:32px; border-radius:7px; border:none; background:#fef2f2; color:#ef4444; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem;">
+                            <i class="ph ph-trash"></i>
+                        </button>
+                        <button title="More Options" onclick="showMoreOptions(event, '${s.qr_code}')"
+                            style="width:32px; height:32px; border-radius:7px; border:none; background:#f8fafc; color:#64748b; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem;">
+                            <i class="ph ph-dots-three-vertical"></i>
+                        </button>
                     </div>
                 </td>
             `;
             tbody.appendChild(tr);
         });
     }
+
+    // Update pagination info
+    const paginationInfo = document.getElementById('pagination-info');
+    if (paginationInfo) {
+        const from = total === 0 ? 0 : start + 1;
+        const to = Math.min(start + perPage, total);
+        paginationInfo.textContent = `Showing ${from} to ${to} of ${total.toLocaleString()} students`;
+    }
+
+    // Build pagination controls
+    const paginationControls = document.getElementById('pagination-controls');
+    if (paginationControls) {
+        paginationControls.innerHTML = '';
+
+        const btnStyle = (active) => `
+            width: 36px; height: 36px; border-radius: 8px; border: 1px solid ${active ? '#3b82f6' : '#e2e8f0'};
+            background: ${active ? '#3b82f6' : 'white'}; color: ${active ? 'white' : '#64748b'};
+            font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem;
+        `;
+
+        // Prev button
+        const prevBtn = document.createElement('button');
+        prevBtn.innerHTML = '<i class="ph ph-caret-left"></i>';
+        prevBtn.style.cssText = btnStyle(false);
+        prevBtn.disabled = page === 1;
+        prevBtn.style.opacity = page === 1 ? '0.4' : '1';
+        prevBtn.onclick = () => { window._studentsPage--; renderPage(); };
+        paginationControls.appendChild(prevBtn);
+
+        // Page number buttons (max 5 visible)
+        let startPage = Math.max(1, page - 2);
+        let endPage = Math.min(totalPages, startPage + 4);
+        if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+
+        for (let i = startPage; i <= endPage; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i;
+            btn.style.cssText = btnStyle(i === page);
+            btn.onclick = ((pageNum) => () => { window._studentsPage = pageNum; renderPage(); })(i);
+            paginationControls.appendChild(btn);
+        }
+
+        if (endPage < totalPages) {
+            const dots = document.createElement('span');
+            dots.textContent = '...';
+            dots.style.cssText = 'padding: 0 0.3rem; color: #94a3b8; line-height: 36px;';
+            paginationControls.appendChild(dots);
+
+            const lastBtn = document.createElement('button');
+            lastBtn.textContent = totalPages;
+            lastBtn.style.cssText = btnStyle(false);
+            lastBtn.onclick = () => { window._studentsPage = totalPages; renderPage(); };
+            paginationControls.appendChild(lastBtn);
+        }
+
+        // Next button
+        const nextBtn = document.createElement('button');
+        nextBtn.innerHTML = '<i class="ph ph-caret-right"></i>';
+        nextBtn.style.cssText = btnStyle(false);
+        nextBtn.disabled = page === totalPages || totalPages === 0;
+        nextBtn.style.opacity = (page === totalPages || totalPages === 0) ? '0.4' : '1';
+        nextBtn.onclick = () => { window._studentsPage++; renderPage(); };
+        paginationControls.appendChild(nextBtn);
+    }
+}
+
+function showMoreOptions(event, qrCode) {
+    event.stopPropagation();
+    // Simple mark present shortcut from the dots menu
+    const existing = document.getElementById('more-options-dropdown');
+    if (existing) existing.remove();
+
+    const dropdown = document.createElement('div');
+    dropdown.id = 'more-options-dropdown';
+    dropdown.style.cssText = `
+        position: fixed;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        z-index: 9999;
+        min-width: 180px;
+        padding: 0.5rem 0;
+    `;
+    dropdown.innerHTML = `
+        <div onclick="markPresent('${qrCode}'); this.parentElement.remove();"
+            style="padding: 0.6rem 1rem; cursor:pointer; display:flex; align-items:center; gap:0.5rem; color:#059669; font-weight:500; font-size:0.9rem;">
+            <i class="ph ph-check-circle"></i> Mark Present
+        </div>
+    `;
+
+    const btn = event.currentTarget;
+    const rect = btn.getBoundingClientRect();
+    dropdown.style.top = (rect.bottom + 5) + 'px';
+    dropdown.style.left = (rect.left - 120) + 'px';
+    document.body.appendChild(dropdown);
+    document.addEventListener('click', () => dropdown.remove(), { once: true });
 }
 
 async function viewProfile(id) {
