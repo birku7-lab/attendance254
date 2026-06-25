@@ -67,6 +67,15 @@ async function loadAllSettings() {
                 }
             }
 
+            // Populate School Logo Preview
+            if (data.school_logo) {
+                const preview = document.getElementById('logo-preview');
+                if (preview) {
+                    preview.src = data.school_logo;
+                    preview.style.display = 'block';
+                }
+            }
+
             // Populate Weekends
             const daysContainer = document.getElementById('days-container');
             const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -146,6 +155,24 @@ async function deleteHoliday(id) {
 }
 
 function setupFormListeners() {
+    // School logo preview listener
+    const logoInput = document.getElementById('school_logo');
+    if(logoInput) {
+        logoInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('logo-preview');
+                    if (preview) {
+                        preview.src = e.target.result;
+                        preview.style.display = 'block';
+                    }
+                }
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+
     // Generic settings forms
     const forms = ['form-school', 'form-schedule', 'form-theme', 'form-dashboard', 'form-notifications', 'form-qrcode'];
     forms.forEach(formId => {

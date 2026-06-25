@@ -33,6 +33,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $class = $_POST['class'] ?? '';
         $gender = $_POST['gender'] ?? '';
 
+        $dob = $_POST['dob'] ?? null;
+        $blood_group = $_POST['blood_group'] ?? null;
+        $emergency_contact = $_POST['emergency_contact'] ?? null;
+        $admitted_date = $_POST['admitted_date'] ?? null;
+        $valid_until = $_POST['valid_until'] ?? null;
+
         if(empty($full_name) || empty($admission_number) || empty($class) || empty($gender) || empty($id)) {
             echo json_encode(["status" => "error", "message" => "All fields are required."]);
             exit;
@@ -40,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Handle optional photo upload
         $photo_query_part = "";
-        $params = [$full_name, $admission_number, $class, $gender, $id];
+        $params = [$full_name, $admission_number, $class, $gender, $dob, $blood_group, $emergency_contact, $admitted_date, $valid_until, $id];
         
         if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
             $upload_dir = '../uploads/photos/';
@@ -61,14 +67,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         unlink('../' . $old_student['photo']);
                     }
                     
-                    // Update params order: full_name, adm, class, gender, photo, id
-                    $params = [$full_name, $admission_number, $class, $gender, $photo_path, $id];
+                    // Update params order: full_name, adm, class, gender, dob, blood_group, emergency_contact, admitted_date, valid_until, photo, id
+                    $params = [$full_name, $admission_number, $class, $gender, $dob, $blood_group, $emergency_contact, $admitted_date, $valid_until, $photo_path, $id];
                 }
             }
         }
 
         try {
-            $stmt = $pdo->prepare("UPDATE students SET full_name = ?, admission_number = ?, class = ?, gender = ? $photo_query_part WHERE id = ?");
+            $stmt = $pdo->prepare("UPDATE students SET full_name = ?, admission_number = ?, class = ?, gender = ?, dob = ?, blood_group = ?, emergency_contact = ?, admitted_date = ?, valid_until = ? $photo_query_part WHERE id = ?");
             $stmt->execute($params);
             echo json_encode(["status" => "success", "message" => "Student updated successfully."]);
         } catch (PDOException $e) {
@@ -86,6 +92,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $admission_number = $_POST['admission_number'] ?? '';
     $class = $_POST['class'] ?? '';
     $gender = $_POST['gender'] ?? '';
+    $dob = $_POST['dob'] ?? null;
+    $blood_group = $_POST['blood_group'] ?? null;
+    $emergency_contact = $_POST['emergency_contact'] ?? null;
+    $admitted_date = $_POST['admitted_date'] ?? null;
+    $valid_until = $_POST['valid_until'] ?? null;
     
     if(empty($full_name) || empty($admission_number) || empty($class) || empty($gender)) {
         echo json_encode(["status" => "error", "message" => "All fields are required."]);
@@ -125,8 +136,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     try {
-        $stmt = $pdo->prepare("INSERT INTO students (full_name, admission_number, class, gender, photo, qr_code) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$full_name, $admission_number, $class, $gender, $photo_path, $qr_code]);
+        $stmt = $pdo->prepare("INSERT INTO students (full_name, admission_number, class, gender, dob, blood_group, emergency_contact, admitted_date, valid_until, photo, qr_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$full_name, $admission_number, $class, $gender, $dob, $blood_group, $emergency_contact, $admitted_date, $valid_until, $photo_path, $qr_code]);
         echo json_encode(["status" => "success", "message" => "Student registered successfully.", "qr_code" => $qr_code, "upload_debug" => $upload_debug]);
     } catch (PDOException $e) {
         if ($e->getCode() == 23000) { // Integrity constraint violation (Duplicate)
@@ -138,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 } else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if ($action === 'list') {
         try {
-            $stmt = $pdo->query("SELECT id, full_name, admission_number, class, gender, photo, qr_code, created_at FROM students ORDER BY id DESC");
+            $stmt = $pdo->query("SELECT * FROM students ORDER BY id DESC");
             $students = $stmt->fetchAll();
             echo json_encode(["status" => "success", "data" => $students]);
         } catch (PDOException $e) {

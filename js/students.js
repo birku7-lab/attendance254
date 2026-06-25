@@ -501,54 +501,41 @@ async function viewProfile(id) {
         const s = res.data;
         const photoSrc = s.photo ? (API_BASE_URL + s.photo) : 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2280%22%20height%3D%2280%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23ccc%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M20%2021v-2a4%204%200%200%200-4-4H8a4%204%200%200%200-4%204v2%22%3E%3C%2Fpath%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%227%22%20r%3D%224%22%3E%3C%2Fcircle%3E%3C%2Fsvg%3E';
         
-        let percentage = 0;
-        if (s.stats.total_days > 0) {
-            percentage = Math.round((s.stats.present_days / s.stats.total_days) * 100);
-        }
+        const student = res.data;
+        const photoSrc = student.photo ? (API_BASE_URL + student.photo) : 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2280%22%20height%3D%2280%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23ccc%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M20%2021v-2a4%204%200%200%200-4-4H8a4%204%200%200%200-4%204v2%22%3E%3C%2Fpath%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%227%22%20r%3D%224%22%3E%3C%2Fcircle%3E%3C%2Fsvg%3E';
+        
+        const imgHtml = `<img src="${photoSrc}" alt="${student.full_name}" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid var(--primary);background:#f0f0f0;">`;
+        let infoHtml = `
+        <div style="flex: 1; min-width: 250px;">
+            <p style="margin: 0.5rem 0; font-size: 1.1rem;"><strong style="color:var(--text-main);">Name:</strong> <span style="color:var(--text-muted);">${student.full_name}</span></p>
+            <p style="margin: 0.5rem 0; font-size: 1.1rem;"><strong style="color:var(--text-main);">Admission No:</strong> <span style="color:var(--text-muted);">${student.admission_number}</span></p>
+            <p style="margin: 0.5rem 0; font-size: 1.1rem;"><strong style="color:var(--text-main);">Class/Grade:</strong> <span style="color:var(--text-muted);">${student.class}</span></p>
+            <p style="margin: 0.5rem 0; font-size: 1.1rem;"><strong style="color:var(--text-main);">Gender:</strong> <span style="color:var(--text-muted);">${student.gender}</span></p>
+            <p style="margin: 0.5rem 0; font-size: 1.1rem;"><strong style="color:var(--text-main);">Date of Birth:</strong> <span style="color:var(--text-muted);">${student.dob || 'N/A'}</span></p>
+            <p style="margin: 0.5rem 0; font-size: 1.1rem;"><strong style="color:var(--text-main);">Blood Group:</strong> <span style="color:var(--text-muted);">${student.blood_group || 'N/A'}</span></p>
+            <p style="margin: 0.5rem 0; font-size: 1.1rem;"><strong style="color:var(--text-main);">Emergency Contact:</strong> <span style="color:var(--text-muted);">${student.emergency_contact || 'N/A'}</span></p>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap: 1rem; border-left: 1px solid var(--border-color); padding-left: 2rem;">
+            <div id="qrcode-container" style="display:inline-block; padding: 10px; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);"></div>
+        </div>
+        `;
 
         document.getElementById('profile-content').innerHTML = `
-            <div style="text-align: center; margin-bottom: 1.5rem;">
-                <img src="${photoSrc}" alt="${s.full_name}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid var(--primary);margin-bottom:1rem;background:#f0f0f0;">
-                <h2 style="margin:0;color:var(--dark);">${s.full_name}</h2>
-                <p style="color:var(--gray);margin-top:0.2rem;">${s.admission_number}</p>
+            <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                ${imgHtml}
+                ${infoHtml}
             </div>
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
-                <div style="background: rgba(0,0,0,0.03); padding: 1rem; border-radius: 10px; text-align: center;">
-                    <p style="color:var(--gray); font-size: 0.85rem; margin-bottom: 0.2rem;">Class</p>
-                    <strong>${s.class}</strong>
-                </div>
-                <div style="background: rgba(0,0,0,0.03); padding: 1rem; border-radius: 10px; text-align: center;">
-                    <p style="color:var(--gray); font-size: 0.85rem; margin-bottom: 0.2rem;">Gender</p>
-                    <strong>${s.gender}</strong>
-                </div>
-            </div>
-
-            <div style="text-align: center; margin-bottom: 1.5rem;">
-                <h4 style="margin-bottom: 0.5rem; color: var(--gray);">Student QR Code</h4>
-                <div id="qrcode-container" style="display:inline-block; padding: 10px; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);"></div>
-                <div style="margin-top: 1rem;">
-                    <button class="btn btn-primary" onclick="printQR('${s.full_name}', '${s.admission_number}')" style="font-size: 0.9rem;">🖨️ Print ID Card</button>
-                </div>
-            </div>
-
-            <div style="background: rgba(0,0,0,0.03); padding: 1rem; border-radius: 10px;">
-                <h4 style="margin-bottom: 1rem; color: var(--dark); border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 0.5rem;">Attendance Stats</h4>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                    <span>Present Days:</span> <strong style="color: var(--success);">${s.stats.present_days || 0}</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                    <span>Absent Days:</span> <strong style="color: var(--danger);">${s.stats.absent_days || 0}</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span>Percentage:</span> <strong style="color: var(--primary);">${percentage}%</strong>
-                </div>
+            <div style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button class="btn btn-primary" onclick="editStudent(${student.id})"><i class="ph ph-pencil-simple"></i> Edit Student</button>
+                <button class="btn" style="background:#10b981; color:white;" onclick="printIDCard(${student.id})"><i class="ph ph-printer"></i> Print ID Card</button>
+                <button class="btn btn-danger" onclick="deleteStudent(${student.id})"><i class="ph ph-trash"></i> Delete Student</button>
             </div>
         `;
 
         // Generate QR Code
         new QRCode(document.getElementById("qrcode-container"), {
-            text: s.qr_code,
+            text: student.qr_code,
             width: 150,
             height: 150,
             colorDark : "#000000",
@@ -569,39 +556,306 @@ function closeProfile() {
     }
 }
 
-function printQR(name, adm) {
+async function printIDCard(studentId) {
+    const student = window._allStudents.find(s => s.id == studentId);
+    if (!student) return;
+    
     const qrContainer = document.getElementById('qrcode-container');
     const qrImg = qrContainer.querySelector('img').src;
+    const photoSrc = student.photo ? (API_BASE_URL + student.photo) : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(student.full_name);
     
-    const printWindow = window.open('', '_blank', 'width=400,height=600');
-    printWindow.document.write(`
+    // Open window immediately to prevent popup blocker
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    printWindow.document.write('Loading ID Card...');
+    
+    // Fetch settings
+    let settings = {};
+    try {
+        const res = await fetch(API_BASE_URL + 'api/settings.php?action=get', { headers: { 'ngrok-skip-browser-warning': '69420' }});
+        const json = await res.json();
+        if (json.status === 'success') {
+            settings = json.data;
+        }
+    } catch(e) { console.error(e); }
+    
+    const schoolName = settings.school_name || "Sunrise High School";
+    const schoolMotto = settings.school_motto || "Excellence • Discipline • Integrity";
+    const schoolLogo = settings.school_logo ? (API_BASE_URL + settings.school_logo) : "";
+    const schoolWebsite = settings.school_website || "www.yourschool.com";
+    const accentColor = settings.accent_color || "#4f46e5";
+
+    const logoHtml = schoolLogo ? `<img src="${schoolLogo}" style="height: 40px; margin-right: 10px; border-radius: 50%;">` : '';
+
+    const htmlContent = `
+        <!DOCTYPE html>
         <html>
             <head>
-                <title>Print ID Card - ${name}</title>
+                <title>Print ID Card - ${student.full_name}</title>
+                <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
                 <style>
-                    body { font-family: 'Inter', sans-serif; text-align: center; padding: 20px; }
-                    .card { border: 2px solid #333; border-radius: 10px; padding: 20px; width: 250px; margin: 0 auto; }
-                    .school-name { font-weight: bold; font-size: 18px; margin-bottom: 15px; color: #4f46e5; }
-                    .student-name { font-weight: bold; font-size: 16px; margin: 10px 0 5px 0; }
-                    .adm-no { color: #555; font-size: 14px; margin-bottom: 15px; }
-                    img { max-width: 150px; }
+                    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                    body { 
+                        font-family: 'Inter', sans-serif; 
+                        margin: 0; 
+                        padding: 20px; 
+                        background: #f1f5f9;
+                        display: flex;
+                        gap: 20px;
+                        justify-content: center;
+                    }
+                    .id-card {
+                        width: 210px; /* Standard CR80 width */
+                        height: 330px;
+                        background: white;
+                        border-radius: 10px;
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+                        overflow: hidden;
+                        display: flex;
+                        flex-direction: column;
+                        position: relative;
+                    }
+                    /* FRONT CARD */
+                    .card-header {
+                        background: ${accentColor};
+                        color: white;
+                        padding: 15px 10px;
+                        text-align: center;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        height: 70px;
+                    }
+                    .school-header-row {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        width: 100%;
+                    }
+                    .school-name {
+                        font-weight: 700;
+                        font-size: 13px;
+                        line-height: 1.1;
+                    }
+                    .school-motto {
+                        font-size: 8px;
+                        opacity: 0.9;
+                        margin-top: 3px;
+                        letter-spacing: 0.5px;
+                    }
+                    .photo-container {
+                        text-align: center;
+                        margin-top: -30px;
+                        z-index: 2;
+                    }
+                    .student-photo {
+                        width: 80px;
+                        height: 80px;
+                        border-radius: 50%;
+                        border: 3px solid white;
+                        object-fit: cover;
+                        background: white;
+                        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                    }
+                    .student-name {
+                        text-align: center;
+                        font-weight: 700;
+                        font-size: 15px;
+                        margin-top: 5px;
+                        color: #1e293b;
+                    }
+                    .student-class {
+                        text-align: center;
+                        font-size: 11px;
+                        color: ${accentColor};
+                        font-weight: 600;
+                        margin-bottom: 10px;
+                    }
+                    .info-grid {
+                        padding: 0 15px;
+                        font-size: 9px;
+                        flex: 1;
+                    }
+                    .info-row {
+                        display: flex;
+                        margin-bottom: 5px;
+                    }
+                    .info-label {
+                        color: #64748b;
+                        width: 60px;
+                        font-weight: 600;
+                    }
+                    .info-value {
+                        color: #0f172a;
+                        font-weight: 600;
+                    }
+
+                    /* BACK CARD */
+                    .back-header {
+                        background: ${accentColor};
+                        color: white;
+                        text-align: center;
+                        padding: 10px;
+                        font-weight: 700;
+                        font-size: 12px;
+                        letter-spacing: 1px;
+                    }
+                    .back-body {
+                        padding: 15px;
+                        font-size: 9px;
+                        color: #334155;
+                        text-align: center;
+                        flex: 1;
+                        display: flex;
+                        flex-direction: column;
+                    }
+                    .terms {
+                        margin-bottom: 10px;
+                        line-height: 1.4;
+                    }
+                    .emergency {
+                        background: #fee2e2;
+                        color: #b91c1c;
+                        padding: 8px;
+                        border-radius: 5px;
+                        margin-bottom: 15px;
+                        font-weight: 600;
+                    }
+                    .barcode-container {
+                        text-align: center;
+                        margin-top: auto;
+                        margin-bottom: 10px;
+                    }
+                    .barcode-container svg {
+                        max-width: 100%;
+                        height: 35px;
+                    }
+                    .qr-container {
+                        position: absolute;
+                        bottom: 30px;
+                        right: 10px;
+                    }
+                    .qr-container img {
+                        width: 45px;
+                        height: 45px;
+                    }
+                    .footer {
+                        background: #0f172a;
+                        color: white;
+                        text-align: center;
+                        padding: 6px;
+                        font-size: 8px;
+                        position: absolute;
+                        bottom: 0;
+                        width: 100%;
+                    }
+
                     @media print {
-                        body { padding: 0; }
+                        body { 
+                            background: white; 
+                            padding: 0;
+                            gap: 10px;
+                        }
+                        .id-card { box-shadow: none; border: 1px solid #ccc; }
                         button { display: none; }
+                        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
                     }
                 </style>
             </head>
             <body>
-                <div class="card">
-                    <div class="school-name">School ID Card</div>
-                    <img src="${qrImg}" alt="QR Code">
-                    <div class="student-name">${name}</div>
-                    <div class="adm-no">${adm}</div>
+                <!-- Front -->
+                <div class="id-card">
+                    <div class="card-header">
+                        <div class="school-header-row">
+                            ${logoHtml}
+                            <div class="school-name">${schoolName}</div>
+                        </div>
+                        <div class="school-motto">${schoolMotto}</div>
+                    </div>
+                    <div class="photo-container">
+                        <img src="${photoSrc}" class="student-photo" alt="Photo">
+                    </div>
+                    <div class="student-name">${student.full_name}</div>
+                    <div class="student-class">${student.class}</div>
+                    
+                    <div class="info-grid">
+                        <div class="info-row">
+                            <span class="info-label">Adm No:</span>
+                            <span class="info-value">${student.admission_number}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">D.O.B:</span>
+                            <span class="info-value">${student.dob || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Blood Grp:</span>
+                            <span class="info-value" style="color: #e11d48;">${student.blood_group || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Admitted:</span>
+                            <span class="info-value">${student.admitted_date || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Valid Until:</span>
+                            <span class="info-value">${student.valid_until || 'N/A'}</span>
+                        </div>
+                    </div>
                 </div>
-                <button onclick="window.print()" style="margin-top: 20px; padding: 10px 20px; cursor: pointer;">Print</button>
+
+                <!-- Back -->
+                <div class="id-card">
+                    <div class="back-header">STUDENT ID CARD</div>
+                    <div class="back-body">
+                        <div class="terms">
+                            This card is the property of ${schoolName}. It must be worn at all times while on school premises. 
+                            If found, please return to the school administration.
+                        </div>
+                        <div class="emergency">
+                            In case of emergency, contact:<br>
+                            <span style="font-size: 11px;">${student.emergency_contact || 'N/A'}</span>
+                        </div>
+                        
+                        <div class="barcode-container">
+                            <svg id="barcode"></svg>
+                        </div>
+                    </div>
+                    
+                    <div class="qr-container">
+                        <img src="${qrImg}" alt="QR">
+                    </div>
+
+                    <div class="footer">
+                        ${schoolWebsite}
+                    </div>
+                </div>
+
+                <div style="position: fixed; top: 20px; right: 20px;">
+                    <button onclick="window.print()" style="padding: 10px 20px; background: ${accentColor}; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                        <svg style="width:16px; height:16px; vertical-align:middle; margin-right:5px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                        Print ID Card
+                    </button>
+                </div>
+
+                <script>
+                    // Render Barcode
+                    JsBarcode("#barcode", "${student.admission_number}", {
+                        format: "CODE128",
+                        width: 1.5,
+                        height: 30,
+                        displayValue: true,
+                        fontSize: 12,
+                        margin: 0
+                    });
+                    
+                    // Auto open print dialog after a slight delay for images/fonts to load
+                    setTimeout(() => {
+                        window.print();
+                    }, 500);
+                </script>
             </body>
         </html>
-    `);
+    `;
+    printWindow.document.open();
+    printWindow.document.write(htmlContent);
     printWindow.document.close();
 }
 
@@ -811,7 +1065,14 @@ async function editStudent(id) {
         document.getElementById('edit-full-name').value = s.full_name;
         document.getElementById('edit-admission-number').value = s.admission_number;
         document.getElementById('edit-class').value = s.class;
-        document.getElementById('edit-gender').value = s.gender;
+        
+        if (document.getElementById('edit-gender')) document.getElementById('edit-gender').value = s.gender;
+        if (document.getElementById('edit-dob')) document.getElementById('edit-dob').value = s.dob || '';
+        if (document.getElementById('edit-blood_group')) document.getElementById('edit-blood_group').value = s.blood_group || '';
+        if (document.getElementById('edit-emergency_contact')) document.getElementById('edit-emergency_contact').value = s.emergency_contact || '';
+        if (document.getElementById('edit-admitted_date')) document.getElementById('edit-admitted_date').value = s.admitted_date || '';
+        if (document.getElementById('edit-valid_until')) document.getElementById('edit-valid_until').value = s.valid_until || '';
+
         document.getElementById('edit-photo').value = ''; // Reset file input
         
         const modal = document.getElementById('edit-modal');

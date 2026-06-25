@@ -11,6 +11,11 @@ try {
         admission_number VARCHAR(100) NOT NULL UNIQUE,
         class VARCHAR(100) NOT NULL,
         gender VARCHAR(20) NOT NULL,
+        dob DATE DEFAULT NULL,
+        blood_group VARCHAR(10) DEFAULT NULL,
+        emergency_contact VARCHAR(50) DEFAULT NULL,
+        admitted_date DATE DEFAULT NULL,
+        valid_until DATE DEFAULT NULL,
         photo VARCHAR(255) DEFAULT NULL,
         qr_code VARCHAR(255) NOT NULL UNIQUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

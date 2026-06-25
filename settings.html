@@ -229,6 +229,18 @@
                                 <input type="text" name="current_term" class="form-control" placeholder="e.g. Term 1">
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label>School Website</label>
+                            <input type="text" name="school_website" class="form-control" placeholder="e.g. www.sunrisehigh.sc.ke">
+                        </div>
+                        <div class="form-group">
+                            <label>School Logo</label>
+                            <input type="file" name="school_logo" id="school_logo" class="form-control" accept="image/*">
+                            <small style="color:var(--text-muted);">Will be used on ID cards and reports.</small>
+                            <div style="margin-top: 10px;">
+                                <img id="logo-preview" src="" style="max-height: 80px; display: none; border-radius: 5px;">
+                            </div>
+                        </div>
                         <button type="submit" class="btn btn-primary mt-3">Save School Info</button>
                     </form>
                 </div>
