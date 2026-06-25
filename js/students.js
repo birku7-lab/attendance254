@@ -717,23 +717,19 @@ async function printIDCard(studentId) {
                         margin-bottom: 15px;
                         font-weight: 600;
                     }
-                    .barcode-container {
-                        text-align: center;
-                        margin-top: auto;
-                        margin-bottom: 10px;
-                    }
-                    .barcode-container svg {
-                        max-width: 100%;
-                        height: 35px;
-                    }
                     .qr-container {
-                        position: absolute;
-                        bottom: 30px;
-                        right: 10px;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        flex: 1;
+                        padding: 10px;
                     }
                     .qr-container img {
-                        width: 45px;
-                        height: 45px;
+                        width: 110px;
+                        height: 110px;
+                        border: 5px solid white;
+                        border-radius: 8px;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
                     }
                     .footer {
                         background: #0f172a;
@@ -779,22 +775,10 @@ async function printIDCard(studentId) {
                             <span class="info-label">Adm No:</span>
                             <span class="info-value">${student.admission_number}</span>
                         </div>
-                        <div class="info-row">
-                            <span class="info-label">D.O.B:</span>
-                            <span class="info-value">${student.dob || 'N/A'}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Blood Grp:</span>
-                            <span class="info-value" style="color: #e11d48;">${student.blood_group || 'N/A'}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Admitted:</span>
-                            <span class="info-value">${student.admitted_date || 'N/A'}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Valid Until:</span>
-                            <span class="info-value">${student.valid_until || 'N/A'}</span>
-                        </div>
+                        ${student.dob ? `<div class="info-row"><span class="info-label">D.O.B:</span><span class="info-value">${student.dob}</span></div>` : ''}
+                        ${student.blood_group ? `<div class="info-row"><span class="info-label">Blood Grp:</span><span class="info-value" style="color:#e11d48;">${student.blood_group}</span></div>` : ''}
+                        ${student.admitted_date ? `<div class="info-row"><span class="info-label">Admitted:</span><span class="info-value">${student.admitted_date}</span></div>` : ''}
+                        ${student.valid_until ? `<div class="info-row"><span class="info-label">Valid Until:</span><span class="info-value">${student.valid_until}</span></div>` : ''}
                     </div>
                 </div>
 
@@ -806,18 +790,11 @@ async function printIDCard(studentId) {
                             This card is the property of ${schoolName}. It must be worn at all times while on school premises. 
                             If found, please return to the school administration.
                         </div>
-                        <div class="emergency">
-                            In case of emergency, contact:<br>
-                            <span style="font-size: 11px;">${student.emergency_contact || 'N/A'}</span>
-                        </div>
+                        ${student.emergency_contact ? `<div class="emergency">In case of emergency, contact:<br><span style="font-size: 11px;">${student.emergency_contact}</span></div>` : ''}
                         
-                        <div class="barcode-container">
-                            <svg id="barcode"></svg>
+                        <div class="qr-container">
+                            <img src="${qrImg}" alt="QR Code">
                         </div>
-                    </div>
-                    
-                    <div class="qr-container">
-                        <img src="${qrImg}" alt="QR">
                     </div>
 
                     <div class="footer">
@@ -833,20 +810,10 @@ async function printIDCard(studentId) {
                 </div>
 
                 <script>
-                    // Render Barcode
-                    JsBarcode("#barcode", "${student.admission_number}", {
-                        format: "CODE128",
-                        width: 1.5,
-                        height: 30,
-                        displayValue: true,
-                        fontSize: 12,
-                        margin: 0
-                    });
-                    
                     // Auto open print dialog after a slight delay for images/fonts to load
                     setTimeout(() => {
                         window.print();
-                    }, 500);
+                    }, 800);
                 </script>
             </body>
         </html>
