@@ -548,8 +548,7 @@ async function viewProfile(id) {
             <p style="margin: 0.5rem 0; font-size: 1.1rem;"><strong style="color:var(--text-main);">Class/Grade:</strong> <span style="color:var(--text-muted);">${student.class}</span></p>
             <p style="margin: 0.5rem 0; font-size: 1.1rem;"><strong style="color:var(--text-main);">Gender:</strong> <span style="color:var(--text-muted);">${student.gender}</span></p>
             <p style="margin: 0.5rem 0; font-size: 1.1rem;"><strong style="color:var(--text-main);">Date of Birth:</strong> <span style="color:var(--text-muted);">${student.dob || 'N/A'}</span></p>
-            <p style="margin: 0.5rem 0; font-size: 1.1rem;"><strong style="color:var(--text-main);">Blood Group:</strong> <span style="color:var(--text-muted);">${student.blood_group || 'N/A'}</span></p>
-            <p style="margin: 0.5rem 0; font-size: 1.1rem;"><strong style="color:var(--text-main);">Emergency Contact:</strong> <span style="color:var(--text-muted);">${student.emergency_contact || 'N/A'}</span></p>
+            <p style="margin: 0.5rem 0; font-size: 1.1rem;"><strong style="color:var(--text-main);">Admitted:</strong> <span style="color:var(--text-muted);">${student.admitted_date || 'N/A'}</span></p>
         </div>
         <div style="display:flex; flex-direction:column; align-items:center; gap: 1rem; border-left: 1px solid var(--border-color); padding-left: 2rem;">
             <div id="qrcode-container" style="display:inline-block; padding: 10px; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);"></div>
@@ -675,7 +674,6 @@ async function printIDCard(studentId) {
                         <div class="info-grid" style="padding:0; display:grid; grid-template-columns:1fr 1fr; gap:2px 10px;">
                             <div class="info-row"><span class="info-label" style="width:45px;">Adm No:</span><span class="info-value">${student.admission_number}</span></div>
                             <div class="info-row"><span class="info-label" style="width:45px;">D.O.B:</span><span class="info-value">${student.dob || '—'}</span></div>
-                            ${student.blood_group ? `<div class="info-row"><span class="info-label" style="width:45px;">Blood:</span><span class="info-value" style="color:#e11d48;">${student.blood_group}</span></div>` : ''}
                             <div class="info-row"><span class="info-label" style="width:45px;">Valid Until:</span><span class="info-value">${student.valid_until || '—'}</span></div>
                         </div>
                     </div>
@@ -690,7 +688,6 @@ async function printIDCard(studentId) {
                 <div class="back-body" style="flex-direction:row; padding:10px; gap:10px;">
                     <div style="flex:1; display:flex; flex-direction:column; justify-content:center; text-align:left;">
                         <div class="terms" style="margin-bottom:5px;">${terms}</div>
-                        ${student.emergency_contact ? `<div class="emergency" style="margin-bottom:5px;">In case of emergency, contact:<br><span>${student.emergency_contact}</span></div>` : ''}
                         <div class="school-info-block" style="text-align:left; border-top:none; border-left:1px solid #e2e8f0; padding-left:10px;">
                             <strong>${schoolName}</strong>
                             ${schoolAddress ? `<div><span class="school-info-icon">📍</span>${schoolAddress}</div>` : ''}
@@ -730,7 +727,6 @@ async function printIDCard(studentId) {
                         <span class="info-label">D.O.B:</span>
                         <span class="info-value">${student.dob || '—'}</span>
                     </div>
-                    ${student.blood_group ? `<div class="info-row"><span class="info-label">Blood Grp:</span><span class="info-value" style="color:#e11d48;">${student.blood_group}</span></div>` : ''}
                     ${student.admitted_date ? `<div class="info-row"><span class="info-label">Admitted:</span><span class="info-value">${student.admitted_date}</span></div>` : ''}
                     <div class="info-row">
                         <span class="info-label">Valid Until:</span>
@@ -745,7 +741,6 @@ async function printIDCard(studentId) {
                 <div class="back-header">${backHeader}</div>
                 <div class="back-body">
                     <div class="terms">${terms}</div>
-                    ${student.emergency_contact ? `<div class="emergency">In case of emergency, contact:<br><span style="font-size: 11px;">${student.emergency_contact}</span></div>` : ''}
                     
                     <div class="qr-container">
                         <img src="${qrImg}" alt="QR Code">
