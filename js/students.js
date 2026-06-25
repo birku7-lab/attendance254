@@ -579,6 +579,8 @@ async function printIDCard(studentId) {
     const schoolMotto = settings.school_motto || "Excellence • Discipline • Integrity";
     const schoolLogo = settings.school_logo ? (API_BASE_URL + settings.school_logo) : "";
     const schoolWebsite = settings.school_website || "www.yourschool.com";
+    const schoolAddress = settings.school_address || "";
+    const schoolEmail = settings.school_email || "";
     const accentColor = settings.accent_color || "#4f46e5";
 
     const logoHtml = schoolLogo ? `<img src="${schoolLogo}" style="height: 40px; margin-right: 10px; border-radius: 50%;">` : '';
@@ -742,6 +744,25 @@ async function printIDCard(studentId) {
                         width: 100%;
                     }
 
+                    .school-info-block {
+                        font-size: 8px;
+                        color: #334155;
+                        text-align: center;
+                        padding: 8px 10px;
+                        background: #f8fafc;
+                        border-top: 1px solid #e2e8f0;
+                        line-height: 1.8;
+                    }
+                    .school-info-block strong {
+                        display: block;
+                        font-size: 9px;
+                        color: #1e293b;
+                        margin-bottom: 3px;
+                    }
+                    .school-info-icon {
+                        margin-right: 3px;
+                    }
+
                     @media print {
                         body { 
                             background: white; 
@@ -775,10 +796,16 @@ async function printIDCard(studentId) {
                             <span class="info-label">Adm No:</span>
                             <span class="info-value">${student.admission_number}</span>
                         </div>
-                        ${student.dob ? `<div class="info-row"><span class="info-label">D.O.B:</span><span class="info-value">${student.dob}</span></div>` : ''}
+                        <div class="info-row">
+                            <span class="info-label">D.O.B:</span>
+                            <span class="info-value">${student.dob || '—'}</span>
+                        </div>
                         ${student.blood_group ? `<div class="info-row"><span class="info-label">Blood Grp:</span><span class="info-value" style="color:#e11d48;">${student.blood_group}</span></div>` : ''}
                         ${student.admitted_date ? `<div class="info-row"><span class="info-label">Admitted:</span><span class="info-value">${student.admitted_date}</span></div>` : ''}
-                        ${student.valid_until ? `<div class="info-row"><span class="info-label">Valid Until:</span><span class="info-value">${student.valid_until}</span></div>` : ''}
+                        <div class="info-row">
+                            <span class="info-label">Valid Until:</span>
+                            <span class="info-value">${student.valid_until || '—'}</span>
+                        </div>
                     </div>
                 </div>
 
@@ -795,10 +822,17 @@ async function printIDCard(studentId) {
                         <div class="qr-container">
                             <img src="${qrImg}" alt="QR Code">
                         </div>
+
+                        <div class="school-info-block">
+                            <strong>${schoolName}</strong>
+                            ${schoolAddress ? `<div><span class="school-info-icon">📍</span>${schoolAddress}</div>` : ''}
+                            ${schoolEmail ? `<div><span class="school-info-icon">✉️</span>${schoolEmail}</div>` : ''}
+                            ${schoolWebsite ? `<div><span class="school-info-icon">🌐</span>${schoolWebsite}</div>` : ''}
+                        </div>
                     </div>
 
                     <div class="footer">
-                        ${schoolWebsite}
+                        ${schoolWebsite || schoolEmail}
                     </div>
                 </div>
 
