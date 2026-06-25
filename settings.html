@@ -187,6 +187,7 @@
                     <li><a href="#tab-notifications"><i class="ph ph-bell"></i> Notifications</a></li>
                     <li><a href="#tab-qrcode"><i class="ph ph-qr-code"></i> QR Codes</a></li>
                     <li><a href="#tab-idcard"><i class="ph ph-identification-card"></i> ID Card Designer</a></li>
+                    <li><a href="#tab-classes"><i class="ph ph-users-four"></i> Classes & Expiries</a></li>
                 </ul>
             </aside>
 
@@ -563,6 +564,41 @@
                             </div>
                             <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">* Preview uses placeholder data</p>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Classes & Expiries Tab -->
+                <div id="tab-classes" class="settings-section">
+                    <div class="section-header">
+                        <h2><i class="ph ph-users-four"></i> Classes & Expiries</h2>
+                        <p>Manage classes and define their default ID Card expiry date. When adding a student to this class, their Valid Until date will default to this.</p>
+                    </div>
+
+                    <form id="form-add-class" class="settings-form" style="display:flex; gap:10px; align-items:flex-end; margin-bottom: 2rem; background: var(--bg-color); padding: 15px; border-radius: 8px;">
+                        <div class="form-group" style="flex:2; margin-bottom:0;">
+                            <label>Class Name</label>
+                            <input type="text" name="class_name" class="form-control" required placeholder="e.g. Grade 10">
+                        </div>
+                        <div class="form-group" style="flex:1; margin-bottom:0;">
+                            <label>Expiry Date</label>
+                            <input type="date" name="expiry_date" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="height:42px;"><i class="ph ph-plus"></i> Add</button>
+                    </form>
+
+                    <div class="table-responsive">
+                        <table class="table" id="classes-table">
+                            <thead>
+                                <tr>
+                                    <th>Class Name</th>
+                                    <th>Default Expiry Date</th>
+                                    <th width="100">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Classes injected via JS -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 

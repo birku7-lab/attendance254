@@ -70,12 +70,35 @@
                     <input type="text" id="admission_number" name="admission_number" class="form-control" required placeholder="e.g. ADM-1024">
                 </div>
 
-                <div class="form-group">
-                    <label for="class">Class *</label>
-                    <input type="text" id="class" name="class" class="form-control" required placeholder="e.g. Grade 8 Blue">
+                <div class="form-group" style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                    <div>
+                        <label for="class">Class *</label>
+                        <input type="text" id="class" name="class" class="form-control" required placeholder="e.g. Grade 8 Blue" list="class_list">
+                        <datalist id="class_list">
+                            <!-- Populated via JS -->
+                        </datalist>
+                    </div>
+                    <div>
+                        <label for="gender">Gender *</label>
+                        <select id="gender" name="gender" class="form-control" required>
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                    <div>
+                        <label for="dob">Date of Birth</label>
+                        <input type="date" id="dob" name="dob" class="form-control">
+                    </div>
+                    <div>
+                        <label for="valid_until">ID Valid Until</label>
+                        <input type="date" id="valid_until" name="valid_until" class="form-control">
+                        <small style="color:var(--text-muted); font-size:0.8rem;">Auto-fills based on Class settings.</small>
+                    </div>
+                </div>
 
                 <div style="text-align: right; margin-top: 2rem;">
                     <button type="submit" class="btn btn-primary">

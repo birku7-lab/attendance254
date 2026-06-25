@@ -1,3 +1,5 @@
+let globalClassExpiries = {};
+
 document.addEventListener('DOMContentLoaded', () => {
     initTabs();
     initColorPicker();
@@ -115,6 +117,12 @@ async function loadAllSettings() {
                 setTimeout(previewIDCard, 100);
             }
 
+            // Populate Classes & Expiries
+            try {
+                if(data.class_expiries) globalClassExpiries = JSON.parse(data.class_expiries);
+            } catch(e) {}
+            renderClassesTable();
+
         }
     } catch(e) {
         console.error(e);
@@ -164,6 +172,53 @@ async function deleteHoliday(id) {
             loadHolidays();
         } else {
             showNotification(json.message, "error");
+        }
+    }
+}
+
+function renderClassesTable() {
+    const tbody = document.querySelector('#classes-table tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    const classes = Object.keys(globalClassExpiries).sort();
+    if (classes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No classes configured.</td></tr>';
+        return;
+    }
+
+    classes.forEach(c => {
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>${c}</strong></td>
+                <td>${globalClassExpiries[c]}</td>
+                <td>
+                    <button type="button" class="btn btn-danger" style="padding:0.3rem 0.6rem; font-size:0.8rem;" onclick="deleteClass('${c.replace(/'/g, "\\'")}')">Delete</button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+async function deleteClass(className) {
+    if(confirm(`Delete expiry date for ${className}?`)) {
+        delete globalClassExpiries[className];
+        const fd = new FormData();
+        fd.append('class_expiries', JSON.stringify(globalClassExpiries));
+        
+        try {
+            const res = await fetch(API_BASE_URL + 'api/settings.php?action=update', {
+                method: 'POST', body: fd, headers: { 'ngrok-skip-browser-warning': '69420' }
+            });
+            const json = await res.json();
+            if(json.status === 'success') {
+                showNotification("Class deleted", "success");
+                renderClassesTable();
+            } else {
+                showNotification(json.message, "error");
+            }
+        } catch(e) {
+            showNotification("Error", "error");
         }
     }
 }
@@ -242,6 +297,46 @@ function setupFormListeners() {
             } finally {
                 btn.innerHTML = ogText; btn.disabled = false;
             }
+        });
+    }
+
+    // Add class form
+    const formClass = document.getElementById('form-add-class');
+    if(formClass) {
+        formClass.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = formClass.querySelector('button[type="submit"]');
+            const ogText = btn.innerHTML;
+            btn.innerHTML = 'Saving...'; btn.disabled = true;
+
+            const fd = new FormData(formClass);
+            const cname = fd.get('class_name');
+            const expiry = fd.get('expiry_date');
+
+            if (cname && expiry) {
+                globalClassExpiries[cname] = expiry;
+                
+                const saveFd = new FormData();
+                saveFd.append('class_expiries', JSON.stringify(globalClassExpiries));
+                
+                try {
+                    const res = await fetch(API_BASE_URL + 'api/settings.php?action=update', {
+                        method: 'POST', body: saveFd, headers: { 'ngrok-skip-browser-warning': '69420' }
+                    });
+                    const json = await res.json();
+                    if(json.status === 'success') {
+                        showNotification("Class saved", "success");
+                        formClass.reset();
+                        renderClassesTable();
+                    } else {
+                        showNotification(json.message, "error");
+                    }
+                } catch(e) {
+                    showNotification("Error", "error");
+                }
+            }
+            
+            btn.innerHTML = ogText; btn.disabled = false;
         });
     }
 }

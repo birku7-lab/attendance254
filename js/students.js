@@ -46,6 +46,11 @@ function compressImage(file, maxWidth, maxHeight, quality) {
 // Used for both add_student.html and students.html
 document.addEventListener('DOMContentLoaded', () => {
     
+    // Logic for Add Student page specifically
+    if (document.getElementById('add-student-form')) {
+        initAddStudentPage();
+    }
+    
     // Add Student Form Submission
     const addForm = document.getElementById('add-student-form');
     if (addForm) {
@@ -182,6 +187,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+
+async function initAddStudentPage() {
+    try {
+        const res = await fetch(API_BASE_URL + 'api/settings.php?action=get', {
+            headers: { 'ngrok-skip-browser-warning': '69420' }
+        });
+        const json = await res.json();
+        if (json.status === 'success' && json.data.class_expiries) {
+            const classExpiries = JSON.parse(json.data.class_expiries);
+            const dataList = document.getElementById('class_list');
+            const classInput = document.getElementById('class');
+            const validUntilInput = document.getElementById('valid_until');
+
+            if (dataList && classInput) {
+                // Populate Datalist
+                for (const className in classExpiries) {
+                    const option = document.createElement('option');
+                    option.value = className;
+                    dataList.appendChild(option);
+                }
+
+                // Auto-fill valid_until on class change
+                classInput.addEventListener('input', (e) => {
+                    const selectedClass = e.target.value;
+                    if (classExpiries[selectedClass]) {
+                        validUntilInput.value = classExpiries[selectedClass];
+                    }
+                });
+            }
+        }
+    } catch(e) {
+        console.error("Failed to load class expiries", e);
+    }
+}
 
 // Global storage for all student data and filtered data
 window._allStudents = [];
