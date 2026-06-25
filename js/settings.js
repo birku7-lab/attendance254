@@ -44,9 +44,18 @@ async function loadAllSettings() {
             const data = res.data;
             
             // Populate standard inputs
-            document.querySelectorAll('input[type="text"], input[type="email"], input[type="time"], input[type="number"], select').forEach(input => {
+            document.querySelectorAll('input[type="text"], input[type="email"], input[type="time"], input[type="number"], input[type="color"], select, textarea').forEach(input => {
                 if (data[input.name] !== undefined) {
                     input.value = data[input.name];
+                }
+            });
+            
+            // Populate radio buttons
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                if (data[radio.name] !== undefined) {
+                    if (radio.value === data[radio.name]) {
+                        radio.checked = true;
+                    }
                 }
             });
 
@@ -100,6 +109,11 @@ async function loadAllSettings() {
                     </div>
                 `;
             });
+
+            // Trigger preview for ID Card Designer if function exists
+            if (typeof previewIDCard === 'function') {
+                setTimeout(previewIDCard, 100);
+            }
 
         }
     } catch(e) {
@@ -174,7 +188,7 @@ function setupFormListeners() {
     }
 
     // Generic settings forms
-    const forms = ['form-school', 'form-schedule', 'form-theme', 'form-dashboard', 'form-notifications', 'form-qrcode'];
+    const forms = ['form-school', 'form-schedule', 'form-theme', 'form-dashboard', 'form-notifications', 'form-qrcode', 'form-idcard'];
     forms.forEach(formId => {
         const form = document.getElementById(formId);
         if(form) {

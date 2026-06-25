@@ -583,7 +583,149 @@ async function printIDCard(studentId) {
     const schoolEmail = settings.school_email || "";
     const accentColor = settings.accent_color || "#4f46e5";
 
+    // ID Card Designer Settings
+    const orientation = settings.id_card_orientation || 'vertical';
+    const size = settings.id_card_size || 'medium';
+    const headerColor = settings.id_card_header_color || accentColor;
+    const headerTextColor = settings.id_card_header_text_color || '#ffffff';
+    const bgColor = settings.id_card_bg_color || '#ffffff';
+    const footerColor = settings.id_card_footer_color || '#0f172a';
+    const backHeader = settings.id_card_back_header || 'STUDENT ID CARD';
+    let terms = settings.id_card_terms || `This card is the property of ${schoolName}. It must be worn at all times while on school premises. If found, please return to the school administration.`;
+
+    const isH = orientation === 'horizontal';
+    
+    // Base sizes (adjust for actual print resolution if needed, typically CSS pixels are 96dpi)
+    const sizeMap = { 
+        small: { w: 180, h: 288 }, // roughly CR80 aspect ratio
+        medium: { w: 210, h: 330 }, 
+        large: { w: 250, h: 380 } 
+    };
+    
+    let w = sizeMap[size] ? sizeMap[size].w : 210;
+    let h = sizeMap[size] ? sizeMap[size].h : 330;
+    if (isH) {
+        let tmp = w; w = h; h = tmp;
+    }
+
     const logoHtml = schoolLogo ? `<img src="${schoolLogo}" style="height: 40px; margin-right: 10px; border-radius: 50%;">` : '';
+
+    // Generate Layout based on orientation
+    let cardFrontHtml = '';
+    let cardBackHtml = '';
+
+    if (isH) {
+        // Horizontal Layout
+        cardFrontHtml = `
+            <div class="id-card horizontal">
+                <div class="card-header" style="flex-direction:row; justify-content:flex-start; padding:10px 15px; height:auto;">
+                    ${logoHtml}
+                    <div style="text-align:left;">
+                        <div class="school-name">${schoolName}</div>
+                        <div class="school-motto">${schoolMotto}</div>
+                    </div>
+                </div>
+                <div style="display:flex; flex:1; padding:10px 15px; gap:15px; align-items:center;">
+                    <div class="photo-container" style="margin:0; width:80px; height:80px;">
+                        <img src="${photoSrc}" class="student-photo" alt="Photo" style="width:80px; height:80px;">
+                    </div>
+                    <div style="flex:1;">
+                        <div class="student-name" style="text-align:left; margin-top:0;">${student.full_name}</div>
+                        <div class="student-class" style="text-align:left; margin-bottom:5px;">${student.class}</div>
+                        
+                        <div class="info-grid" style="padding:0; display:grid; grid-template-columns:1fr 1fr; gap:2px 10px;">
+                            <div class="info-row"><span class="info-label" style="width:45px;">Adm No:</span><span class="info-value">${student.admission_number}</span></div>
+                            <div class="info-row"><span class="info-label" style="width:45px;">D.O.B:</span><span class="info-value">${student.dob || '—'}</span></div>
+                            ${student.blood_group ? `<div class="info-row"><span class="info-label" style="width:45px;">Blood:</span><span class="info-value" style="color:#e11d48;">${student.blood_group}</span></div>` : ''}
+                            <div class="info-row"><span class="info-label" style="width:45px;">Valid Until:</span><span class="info-value">${student.valid_until || '—'}</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">${schoolWebsite || schoolEmail}</div>
+            </div>
+        `;
+
+        cardBackHtml = `
+            <div class="id-card horizontal">
+                <div class="back-header">${backHeader}</div>
+                <div class="back-body" style="flex-direction:row; padding:10px; gap:10px;">
+                    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; text-align:left;">
+                        <div class="terms" style="margin-bottom:5px;">${terms}</div>
+                        ${student.emergency_contact ? `<div class="emergency" style="margin-bottom:5px;">In case of emergency, contact:<br><span>${student.emergency_contact}</span></div>` : ''}
+                        <div class="school-info-block" style="text-align:left; border-top:none; border-left:1px solid #e2e8f0; padding-left:10px;">
+                            <strong>${schoolName}</strong>
+                            ${schoolAddress ? `<div><span class="school-info-icon">📍</span>${schoolAddress}</div>` : ''}
+                            ${schoolEmail ? `<div><span class="school-info-icon">✉️</span>${schoolEmail}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="qr-container" style="padding:0; align-items:center; flex:none;">
+                        <img src="${qrImg}" alt="QR Code" style="width:90px; height:90px;">
+                    </div>
+                </div>
+                <div class="footer">${schoolWebsite || schoolEmail}</div>
+            </div>
+        `;
+    } else {
+        // Vertical Layout (Standard)
+        cardFrontHtml = `
+            <div class="id-card">
+                <div class="card-header">
+                    <div class="school-header-row">
+                        ${logoHtml}
+                        <div class="school-name">${schoolName}</div>
+                    </div>
+                    <div class="school-motto">${schoolMotto}</div>
+                </div>
+                <div class="photo-container">
+                    <img src="${photoSrc}" class="student-photo" alt="Photo">
+                </div>
+                <div class="student-name">${student.full_name}</div>
+                <div class="student-class">${student.class}</div>
+                
+                <div class="info-grid">
+                    <div class="info-row">
+                        <span class="info-label">Adm No:</span>
+                        <span class="info-value">${student.admission_number}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">D.O.B:</span>
+                        <span class="info-value">${student.dob || '—'}</span>
+                    </div>
+                    ${student.blood_group ? `<div class="info-row"><span class="info-label">Blood Grp:</span><span class="info-value" style="color:#e11d48;">${student.blood_group}</span></div>` : ''}
+                    ${student.admitted_date ? `<div class="info-row"><span class="info-label">Admitted:</span><span class="info-value">${student.admitted_date}</span></div>` : ''}
+                    <div class="info-row">
+                        <span class="info-label">Valid Until:</span>
+                        <span class="info-value">${student.valid_until || '—'}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        cardBackHtml = `
+            <div class="id-card">
+                <div class="back-header">${backHeader}</div>
+                <div class="back-body">
+                    <div class="terms">${terms}</div>
+                    ${student.emergency_contact ? `<div class="emergency">In case of emergency, contact:<br><span style="font-size: 11px;">${student.emergency_contact}</span></div>` : ''}
+                    
+                    <div class="qr-container">
+                        <img src="${qrImg}" alt="QR Code">
+                    </div>
+
+                    <div class="school-info-block">
+                        <strong>${schoolName}</strong>
+                        ${schoolAddress ? `<div><span class="school-info-icon">📍</span>${schoolAddress}</div>` : ''}
+                        ${schoolEmail ? `<div><span class="school-info-icon">✉️</span>${schoolEmail}</div>` : ''}
+                        ${schoolWebsite ? `<div><span class="school-info-icon">🌐</span>${schoolWebsite}</div>` : ''}
+                    </div>
+                </div>
+
+                <div class="footer">
+                    ${schoolWebsite || schoolEmail}
+                </div>
+            </div>
+        `;
+    }
 
     const htmlContent = `
         <!DOCTYPE html>
@@ -601,11 +743,12 @@ async function printIDCard(studentId) {
                         display: flex;
                         gap: 20px;
                         justify-content: center;
+                        flex-wrap: wrap;
                     }
                     .id-card {
-                        width: 210px; /* Standard CR80 width */
-                        height: 330px;
-                        background: white;
+                        width: ${w}px;
+                        height: ${h}px;
+                        background: ${bgColor};
                         border-radius: 10px;
                         box-shadow: 0 4px 10px rgba(0,0,0,0.1);
                         overflow: hidden;
@@ -615,14 +758,13 @@ async function printIDCard(studentId) {
                     }
                     /* FRONT CARD */
                     .card-header {
-                        background: ${accentColor};
-                        color: white;
+                        background: ${headerColor};
+                        color: ${headerTextColor};
                         padding: 15px 10px;
                         text-align: center;
                         display: flex;
                         flex-direction: column;
                         align-items: center;
-                        height: 70px;
                     }
                     .school-header-row {
                         display: flex;
@@ -665,7 +807,7 @@ async function printIDCard(studentId) {
                     .student-class {
                         text-align: center;
                         font-size: 11px;
-                        color: ${accentColor};
+                        color: ${headerColor};
                         font-weight: 600;
                         margin-bottom: 10px;
                     }
@@ -690,8 +832,8 @@ async function printIDCard(studentId) {
 
                     /* BACK CARD */
                     .back-header {
-                        background: ${accentColor};
-                        color: white;
+                        background: ${headerColor};
+                        color: ${headerTextColor};
                         text-align: center;
                         padding: 10px;
                         font-weight: 700;
@@ -734,7 +876,7 @@ async function printIDCard(studentId) {
                         box-shadow: 0 2px 8px rgba(0,0,0,0.15);
                     }
                     .footer {
-                        background: #0f172a;
+                        background: ${footerColor};
                         color: white;
                         text-align: center;
                         padding: 6px;
@@ -742,6 +884,7 @@ async function printIDCard(studentId) {
                         position: absolute;
                         bottom: 0;
                         width: 100%;
+                        box-sizing: border-box;
                     }
 
                     .school-info-block {
@@ -777,64 +920,10 @@ async function printIDCard(studentId) {
             </head>
             <body>
                 <!-- Front -->
-                <div class="id-card">
-                    <div class="card-header">
-                        <div class="school-header-row">
-                            ${logoHtml}
-                            <div class="school-name">${schoolName}</div>
-                        </div>
-                        <div class="school-motto">${schoolMotto}</div>
-                    </div>
-                    <div class="photo-container">
-                        <img src="${photoSrc}" class="student-photo" alt="Photo">
-                    </div>
-                    <div class="student-name">${student.full_name}</div>
-                    <div class="student-class">${student.class}</div>
-                    
-                    <div class="info-grid">
-                        <div class="info-row">
-                            <span class="info-label">Adm No:</span>
-                            <span class="info-value">${student.admission_number}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">D.O.B:</span>
-                            <span class="info-value">${student.dob || '—'}</span>
-                        </div>
-                        ${student.blood_group ? `<div class="info-row"><span class="info-label">Blood Grp:</span><span class="info-value" style="color:#e11d48;">${student.blood_group}</span></div>` : ''}
-                        ${student.admitted_date ? `<div class="info-row"><span class="info-label">Admitted:</span><span class="info-value">${student.admitted_date}</span></div>` : ''}
-                        <div class="info-row">
-                            <span class="info-label">Valid Until:</span>
-                            <span class="info-value">${student.valid_until || '—'}</span>
-                        </div>
-                    </div>
-                </div>
+                ${cardFrontHtml}
 
                 <!-- Back -->
-                <div class="id-card">
-                    <div class="back-header">STUDENT ID CARD</div>
-                    <div class="back-body">
-                        <div class="terms">
-                            This card is the property of ${schoolName}. It must be worn at all times while on school premises. 
-                            If found, please return to the school administration.
-                        </div>
-                        ${student.emergency_contact ? `<div class="emergency">In case of emergency, contact:<br><span style="font-size: 11px;">${student.emergency_contact}</span></div>` : ''}
-                        
-                        <div class="qr-container">
-                            <img src="${qrImg}" alt="QR Code">
-                        </div>
-
-                        <div class="school-info-block">
-                            <strong>${schoolName}</strong>
-                            ${schoolAddress ? `<div><span class="school-info-icon">📍</span>${schoolAddress}</div>` : ''}
-                            ${schoolEmail ? `<div><span class="school-info-icon">✉️</span>${schoolEmail}</div>` : ''}
-                            ${schoolWebsite ? `<div><span class="school-info-icon">🌐</span>${schoolWebsite}</div>` : ''}
-                        </div>
-                    </div>
-
-                    <div class="footer">
-                        ${schoolWebsite || schoolEmail}
-                    </div>
-                </div>
+                ${cardBackHtml}
 
                 <div style="position: fixed; top: 20px; right: 20px;">
                     <button onclick="window.print()" style="padding: 10px 20px; background: ${accentColor}; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">

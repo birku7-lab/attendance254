@@ -186,6 +186,7 @@
                     <li><a href="#tab-dashboard"><i class="ph ph-layout"></i> Dashboard</a></li>
                     <li><a href="#tab-notifications"><i class="ph ph-bell"></i> Notifications</a></li>
                     <li><a href="#tab-qrcode"><i class="ph ph-qr-code"></i> QR Codes</a></li>
+                    <li><a href="#tab-idcard"><i class="ph ph-identification-card"></i> ID Card Designer</a></li>
                 </ul>
             </aside>
 
@@ -470,8 +471,194 @@
                     </form>
                 </div>
 
+                <!-- ID Card Designer Tab -->
+                <div id="tab-idcard" class="settings-section">
+                    <div class="section-header">
+                        <h2><i class="ph ph-identification-card"></i> ID Card Designer</h2>
+                        <p>Customize how student ID cards look when printed. Changes are reflected immediately in the preview.</p>
+                    </div>
+
+                    <div style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: flex-start;">
+                        <!-- Controls -->
+                        <form id="form-idcard" class="settings-form" style="flex: 1; min-width: 280px;">
+
+                            <h4 style="margin-bottom:1rem; color:var(--text-main); border-bottom:1px solid var(--border-color); padding-bottom:0.5rem;">Layout</h4>
+
+                            <div class="form-group">
+                                <label>Orientation</label>
+                                <div style="display:flex; gap:1rem; margin-top:0.5rem;">
+                                    <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-weight:500;">
+                                        <input type="radio" name="id_card_orientation" value="vertical" checked onchange="previewIDCard()"> Vertical (Portrait)
+                                    </label>
+                                    <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-weight:500;">
+                                        <input type="radio" name="id_card_orientation" value="horizontal" onchange="previewIDCard()"> Horizontal (Landscape)
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Card Size</label>
+                                <select name="id_card_size" class="form-control" onchange="previewIDCard()">
+                                    <option value="small">Small (CR80 — Standard Credit Card)</option>
+                                    <option value="medium" selected>Medium (A7)</option>
+                                    <option value="large">Large (A6)</option>
+                                </select>
+                            </div>
+
+                            <h4 style="margin-bottom:1rem; margin-top:1.5rem; color:var(--text-main); border-bottom:1px solid var(--border-color); padding-bottom:0.5rem;">Colors</h4>
+
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                                <div class="form-group">
+                                    <label>Header Color</label>
+                                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                                        <input type="color" name="id_card_header_color" value="#4f46e5" class="form-control" style="height:40px; padding:2px; cursor:pointer;" onchange="previewIDCard()">
+                                        <span id="header-color-val" style="font-size:0.8rem; color:var(--text-muted);">#4f46e5</span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Header Text Color</label>
+                                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                                        <input type="color" name="id_card_header_text_color" value="#ffffff" class="form-control" style="height:40px; padding:2px; cursor:pointer;" onchange="previewIDCard()">
+                                        <span id="header-text-color-val" style="font-size:0.8rem; color:var(--text-muted);">#ffffff</span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Card Background</label>
+                                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                                        <input type="color" name="id_card_bg_color" value="#ffffff" class="form-control" style="height:40px; padding:2px; cursor:pointer;" onchange="previewIDCard()">
+                                        <span id="bg-color-val" style="font-size:0.8rem; color:var(--text-muted);">#ffffff</span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Footer Color</label>
+                                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                                        <input type="color" name="id_card_footer_color" value="#0f172a" class="form-control" style="height:40px; padding:2px; cursor:pointer;" onchange="previewIDCard()">
+                                        <span id="footer-color-val" style="font-size:0.8rem; color:var(--text-muted);">#0f172a</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h4 style="margin-bottom:1rem; margin-top:1.5rem; color:var(--text-main); border-bottom:1px solid var(--border-color); padding-bottom:0.5rem;">Text Content</h4>
+
+                            <div class="form-group">
+                                <label>Back Header Text</label>
+                                <input type="text" name="id_card_back_header" class="form-control" value="STUDENT ID CARD" placeholder="e.g. STUDENT ID CARD" onkeyup="previewIDCard()">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Terms Text (Back of Card)</label>
+                                <textarea name="id_card_terms" class="form-control" rows="3" onkeyup="previewIDCard()" placeholder="This card is the property of...">This card is the property of the school. It must be worn at all times on school premises. If found, please return to admin.</textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary mt-3" style="width:100%;">
+                                <i class="ph ph-floppy-disk"></i> Save ID Card Settings
+                            </button>
+                        </form>
+
+                        <!-- Live Preview -->
+                        <div style="flex: 1; min-width: 220px; max-width: 320px;">
+                            <h4 style="margin-bottom:1rem; color:var(--text-main);">Live Preview</h4>
+                            <div id="idcard-preview" style="transform-origin: top left; transition: all 0.3s;">
+                                <!-- JS fills this -->
+                            </div>
+                            <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">* Preview uses placeholder data</p>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </main>
+
+<script>
+// ---- ID Card Designer Preview ----
+function previewIDCard() {
+    const form = document.getElementById('form-idcard');
+    if (!form) return;
+    const fd = new FormData(form);
+
+    const orientation = fd.get('id_card_orientation') || 'vertical';
+    const size = fd.get('id_card_size') || 'medium';
+    const headerColor = fd.get('id_card_header_color') || '#4f46e5';
+    const headerTextColor = fd.get('id_card_header_text_color') || '#ffffff';
+    const bgColor = fd.get('id_card_bg_color') || '#ffffff';
+    const footerColor = fd.get('id_card_footer_color') || '#0f172a';
+    const backHeader = fd.get('id_card_back_header') || 'STUDENT ID CARD';
+    const terms = fd.get('id_card_terms') || '';
+
+    // Update color labels
+    document.getElementById('header-color-val').textContent = headerColor;
+    document.getElementById('header-text-color-val').textContent = headerTextColor;
+    document.getElementById('bg-color-val').textContent = bgColor;
+    document.getElementById('footer-color-val').textContent = footerColor;
+
+    const sizeMap = { small: { w: 150, h: 240 }, medium: { w: 190, h: 290 }, large: { w: 230, h: 330 } };
+    let { w, h } = sizeMap[size] || sizeMap.medium;
+    const isH = orientation === 'horizontal';
+    if (isH) { const tmp = w; w = h; h = tmp; }
+
+    const preview = document.getElementById('idcard-preview');
+    if (!preview) return;
+
+    const photoPlaceholder = `<div style="width:${isH?60:70}px;height:${isH?60:70}px;border-radius:50%;background:#e2e8f0;border:3px solid white;display:flex;align-items:center;justify-content:center;font-size:24px;">👤</div>`;
+
+    if (isH) {
+        // Horizontal Layout
+        preview.innerHTML = `
+        <div style="width:${w}px;height:${h}px;background:${bgColor};border-radius:10px;overflow:hidden;box-shadow:0 4px 10px rgba(0,0,0,0.15);font-family:Inter,sans-serif;display:flex;flex-direction:column;position:relative;">
+            <div style="background:${headerColor};color:${headerTextColor};padding:8px 12px;display:flex;align-items:center;gap:8px;">
+                <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;">🏫</div>
+                <div><div style="font-weight:700;font-size:10px;">School Name</div><div style="font-size:7px;opacity:0.85;">Motto goes here</div></div>
+            </div>
+            <div style="display:flex;flex:1;padding:10px;gap:10px;align-items:center;">
+                ${photoPlaceholder}
+                <div style="flex:1;">
+                    <div style="font-weight:700;font-size:11px;color:#1e293b;">Student Name</div>
+                    <div style="font-size:9px;color:${headerColor};font-weight:600;margin-bottom:4px;">Class / Grade</div>
+                    <div style="font-size:8px;color:#475569;"><b>Adm No:</b> ADM-0001</div>
+                    <div style="font-size:8px;color:#475569;"><b>D.O.B:</b> 2005-01-15</div>
+                    <div style="font-size:8px;color:#e11d48;"><b>Blood:</b> O+</div>
+                    <div style="font-size:8px;color:#475569;"><b>Valid Until:</b> 2026-12-31</div>
+                </div>
+            </div>
+            <div style="background:${footerColor};color:white;text-align:center;padding:4px;font-size:7px;">www.yourschool.com</div>
+        </div>`;
+    } else {
+        // Vertical Layout
+        const photoTop = Math.round(h * 0.2);
+        preview.innerHTML = `
+        <div style="width:${w}px;height:${h}px;background:${bgColor};border-radius:10px;overflow:hidden;box-shadow:0 4px 10px rgba(0,0,0,0.15);font-family:Inter,sans-serif;display:flex;flex-direction:column;position:relative;">
+            <div style="background:${headerColor};color:${headerTextColor};padding:12px 10px;text-align:center;">
+                <div style="font-weight:700;font-size:11px;">School Name</div>
+                <div style="font-size:7px;opacity:0.85;margin-top:2px;">Motto goes here</div>
+            </div>
+            <div style="text-align:center;margin-top:-25px;z-index:2;">
+                ${photoPlaceholder.replace('margin:0 auto','margin:0 auto')}
+            </div>
+            <div style="text-align:center;margin-top:5px;">
+                <div style="font-weight:700;font-size:12px;color:#1e293b;">Student Name</div>
+                <div style="font-size:9px;color:${headerColor};font-weight:600;">Class / Grade</div>
+            </div>
+            <div style="padding:0 12px;margin-top:8px;flex:1;">
+                <div style="font-size:8px;color:#475569;display:flex;margin-bottom:3px;"><span style="color:#64748b;width:55px;font-weight:600;">Adm No:</span><span>ADM-0001</span></div>
+                <div style="font-size:8px;color:#475569;display:flex;margin-bottom:3px;"><span style="color:#64748b;width:55px;font-weight:600;">D.O.B:</span><span>2005-01-15</span></div>
+                <div style="font-size:8px;display:flex;margin-bottom:3px;"><span style="color:#64748b;width:55px;font-weight:600;">Blood Grp:</span><span style="color:#e11d48;font-weight:600;">O+</span></div>
+                <div style="font-size:8px;color:#475569;display:flex;"><span style="color:#64748b;width:55px;font-weight:600;">Valid Until:</span><span>2026-12-31</span></div>
+            </div>
+            <div style="background:${footerColor};color:white;text-align:center;padding:4px;font-size:7px;position:absolute;bottom:0;width:100%;">www.yourschool.com</div>
+        </div>`;
+    }
+}
+
+// Init preview on tab open
+document.addEventListener('DOMContentLoaded', () => {
+    // Run preview once settings load
+    const tabLink = document.querySelector('a[href="#tab-idcard"]');
+    if (tabLink) {
+        tabLink.addEventListener('click', () => setTimeout(previewIDCard, 100));
+    }
+});
+</script>
+
 </body>
 </html>
